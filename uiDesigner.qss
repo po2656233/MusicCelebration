@@ -1,0 +1,116 @@
+QWidget {
+background-color: #DD99DD;
+/*background-color: #67B9F0;*/
+
+/*background-color: #228B22;*/
+}
+QDial{
+background-color: #FFAAFF;
+}
+QDialog{
+background-color: #5F9EA0;
+}
+QRadioButton
+{
+background-color: #FFA500;
+}
+QListView
+{
+    border-image: url(:/img/bg3.jpg);
+    color:#000000;
+    background-color: rgb(255, 170, 255);
+    font-weight:bold;
+    font-size: 14px;
+    padding:0px 0px 20px 0px;
+}
+、
+
+/* 行与行之间交替颜色不同 */
+/* setAlternatingRowColors(true); */
+QListView::item:alternate {
+        background:#7B68EE;
+}
+
+/* 当条目被选中时 */
+QListView::item:selected {
+        border:2px solid #6a6ea9;
+}
+
+/* 当条目被选中,并且不是有效的 */
+QListView::item::selected:!active {
+        background:qlineargradient(x1:0, y1:0,x2:1,y2:0, stop:0 #6a6ea9, stop:1 #888dd9);
+}
+
+/* 鼠标县浮在条目上 */
+QListView::item::hover {
+        background:qlineargradient(x1:0, y1:0,x2:1,y2:0, stop:0 #6B8E23, stop:1 #FFD700);
+}
+
+
+
+QPushButton:pressed
+{
+ background-color: #8B1165;
+}
+
+QLCDNumber
+{
+background-color:#412550
+}
+QMenu
+{
+background-color:#4169E1
+}
+
+QSlider::groove:horizontal {
+border: 1px solid #4A708B;
+background: #C0C0C0;
+height: 5px;
+border-radius: 1px;
+padding-left:-1px;
+padding-right:-1px;
+}
+
+QSlider::sub-page:horizontal {
+background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+    stop:0 #B1B1B1, stop:1 #c4c4c4);
+background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 1,
+    stop: 0 #5DCCFF, stop: 1 #1874CD);
+border: 1px solid #4A708B;
+height: 10px;
+border-radius: 2px;
+}
+
+QSlider::add-page:horizontal {
+background: #575757;
+border: 0px solid #777;
+height: 10px;
+border-radius: 2px;
+}
+
+QSlider::handle:horizontal
+{
+    background: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+    stop:0.6 #45ADED, stop:0.778409 rgba(255, 255, 255, 255));
+
+    width: 11px;
+    margin-top: -3px;
+    margin-bottom: -3px;
+    border-radius: 5px;
+}
+
+QSlider::handle:horizontal:hover {
+    background: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5, stop:0.6 #2A8BDA,
+    stop:0.778409 rgba(255, 255, 255, 255));
+
+    width: 11px;
+    margin-top: -3px;
+    margin-bottom: -3px;
+    border-radius: 5px;
+}
+
+QSlider::sub-page:horizontal:disabled {
+background: #00009C;
+border-color: #999;
+}
+
