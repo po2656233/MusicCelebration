@@ -21,13 +21,15 @@ class WebView : public QWidget
 public:
   explicit WebView(QWidget *parent = 0);
   ~WebView();
-  void setUrl(const QString& web);
+    QString setUrl(const QString& web, QString dir);
+    void getHttpData(const QString &modelUrl, QByteArray &data);
+//    void handleData(QByteArray &data);
 signals:
 
 public slots:
-  void onClicked();
   void onQuery(QNetworkReply*);
 
+//  void onClicked();
 private:
   QNetworkAccessManager*  m_network;
   QLineEdit*              m_addrEdit;

@@ -54,3 +54,4 @@ RESOURCES += \
     stylefile.qrc
 
 RC_FILE = iconExe.rc
+
