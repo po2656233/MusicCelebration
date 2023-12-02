@@ -23,6 +23,6 @@ void LineEditMx::keyPressEvent(QKeyEvent *event)
 
 void LineEditMx::focusOutEvent(QFocusEvent *e)
 {
-    emit over();
+//    emit over();
     QLineEdit::focusOutEvent(e);
 }
