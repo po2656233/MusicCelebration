@@ -81,6 +81,7 @@ QString WebView::setUrl(const QString &web,QString dir)
     if(file.size()<10){
         file.remove();
     }
+    reply->deleteLater();
     qDebug()<<"当前请求的网络地址"<<web<<" 保存为:"<<fileName;
     return fileName;
 }

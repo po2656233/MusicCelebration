@@ -72,7 +72,7 @@ bool isLoadNow = false; //是否正在加载中
 
 MusicShow::MusicShow(QWidget *parent) :
     QWidget(parent),m_isTop(false),
-    m_isLrc(false),m_isVideo(false),
+    m_isLrc(false),m_isShowLrc(true),m_isVideo(false),
     m_duration(0),m_dragPosition(QPoint(0,0))
 {
 
@@ -162,22 +162,21 @@ MusicShow::MusicShow(QWidget *parent) :
     m_actQuit->setText(tr("闭月羞花"));
 
     // 快捷键
-    m_play->setShortcut(QKeySequence(Qt::Key_Enter));
+    m_play->setShortcut(QKeySequence(Qt::Key_Return));
     m_paused->setShortcut(QKeySequence(Qt::Key_Space));
-    m_stop->setShortcut(QKeySequence("F4"));
+    m_stop->setShortcut(QKeySequence(Qt::Key_Escape));
 
     // 设置字体颜色
-    QFont ft;
-    ft.setPointSize(16);
+
     QPalette pa;
     pa.setColor(QPalette::WindowText,Qt::blue);
-    m_playInfo->setFont(ft);
     m_playInfo->setPalette(pa);
+    m_playInfo->setFont(QFont("FangSong", 18));
 
     //QPalette pal1 = m_loading->palette();
     pa.setColor(QPalette::ButtonText,QColor(220,20,60));
     m_loading->setPalette(pa);
-    pa.setColor(QPalette::ButtonText,QColor(0,0,128));
+    pa.setColor(QPalette::ButtonText,QColor(125,0,125));
     m_playMode->setPalette(pa);
 
     QFont font = m_loading->font();
@@ -191,7 +190,7 @@ MusicShow::MusicShow(QWidget *parent) :
     m_player->setPlaylist(m_fileList);
     m_video->setHidden(true);
     m_video->setVideo(m_view);
-    m_view->setPlayer(m_player);
+    //    m_view->setPlayer(m_player);
     m_view->setAspectRatioMode(Qt::IgnoreAspectRatio);
     m_lound->setValue(50);
     m_lound->setNotchesVisible(true);
@@ -426,7 +425,7 @@ bool MusicShow::checkSong(const QString &songName)
     if(songName.isNull()||songName.isEmpty())return false;
     synchronyLrc(songName);
 
-    return( songName.contains(".mp3") || songName.contains(".ape")|| songName.contains(".flac")|| songName.contains(".mp4") );
+    return( songName.contains(".mp3") || songName.contains(".ape")|| songName.contains(".flac"));
 }
 
 // 获取所有文件列表
@@ -469,6 +468,7 @@ void MusicShow::synchronyLrc(const QString &fileName)
     m_songLrc->clear();
     m_isLrc = m_songLrc->loadLrc(&fileName);
     if (!m_isLrc) m_songLrc->setText(QStringLiteral("歌词信息"));
+    if(m_isShowLrc) m_songLrc->show();
 }
 // 选择列表当中的曲目
 void MusicShow::onSelectitem(const QModelIndex &index)
@@ -480,6 +480,9 @@ void MusicShow::onSelectitem(const QModelIndex &index)
         {
             m_playing = m_fileList->media(i).canonicalUrl();
             m_fileList->setCurrentIndex(i);
+            m_songLrc->stopLrcMask();
+            m_songLrc->clear();
+            listTurnVedio( !checkSong(m_fileList->currentMedia().canonicalUrl().toString()) );
             break;
         }
     }
@@ -747,21 +750,15 @@ void MusicShow::onLoading()
     ButtonMx* btnLocal = new ButtonMx("本地导入",loadDlg);
     ButtonMx* btnWeb = new ButtonMx("加载网络资源",loadDlg);
     // 字体样式
-    QFont loadFt;
+    QFont loadFt = QFont("STLiti", 10, QFont::DemiBold);
     QPalette loadPa;
-    loadPa.setColor(QPalette::WindowText,QColor(44,84,135));
-    loadFt.setBold(true);
-    loadFt.setStyle(QFont::StyleOblique);
+    loadPa.setColor(QPalette::WindowText,QColor(100,0,138));
 
     btnLocal->setPalette(loadPa);
     btnLocal->setFont(loadFt);
-    btnLocal->setColorCustom(true);
-    btnLocal->setColor("background-color: #FFDAB9;");
 
     btnWeb->setPalette(loadPa);
     btnWeb->setFont(loadFt);
-    btnWeb->setColorCustom(true);
-    btnWeb->setColor("background-color: #FFDAB9;");
 
     QVBoxLayout* fLayout = new QVBoxLayout;
     fLayout->addWidget(btnLocal);
@@ -898,7 +895,7 @@ void MusicShow::listTurnVedio(bool isVideo)
     m_video->setHidden(!isVideo);
     m_view->setHidden(!isVideo);
     m_listView->setHidden(isVideo);
-    if (isVideo) m_video->waitingFor(0);
+    //    if (isVideo) m_video->waitingFor(0);
     m_isVideo = isVideo;
 }
 
@@ -1096,6 +1093,7 @@ void MusicShow::onSingTheSong(int index)
             m_listView->setCurrentIndex(m_model->index(i));
         }
     }
+
     m_player->play();
 }
 
@@ -1191,6 +1189,7 @@ void MusicShow::on_playModel_clicked()
         break;
     default:
         btnOnce->setChecked(true);
+        addressGlg->deleteLater();
         break;
     }
     connect(btnOnce,&ButtonMx::chooseSIG,this,[=](){
@@ -1250,20 +1249,14 @@ void MusicShow::onSigletonShow()
 
 void MusicShow::onSongShow()
 {
-    if(m_isPlayer && !m_isVideo)
-    {
-        if(m_songLrc->isHidden())
-        {
-            m_songLrc->setHidden(false);
-            m_actLry->setText(tr("暗流涌动"));
-
-        }
-        else
-        {
-            m_songLrc->setHidden(true);
-            m_actLry->setText(tr("英花逐流"));
-        }
+    if(m_isShowLrc) {
+        m_songLrc->setHidden(true);
+        m_actLry->setText(tr("暗流涌动"));
+    }else{
+        m_songLrc->setHidden(false);
+        m_actLry->setText(tr("英花逐流"));
     }
+    m_isShowLrc = !m_isShowLrc;
 }
 
 void MusicShow::on_err(QMediaPlayer::Error error)
@@ -1298,12 +1291,7 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         qDebug()<<400;
         break;
     case QMediaPlayer::LoadingMedia:
-        m_songLrc->stopLrcMask();
-        m_songLrc->clear();
-        listTurnVedio( !checkSong(m_fileList->currentMedia().canonicalUrl().toString()) );
         sigletonShow(false);//正常窗体
-        m_songLrc->show();
-
         qDebug()<<500;
         break;
     case QMediaPlayer::LoadedMedia:

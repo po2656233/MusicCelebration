@@ -132,7 +132,7 @@ private slots:
     void OnTrayActivated(QSystemTrayIcon::ActivationReason reason);
     // 单口播放
     void onSigletonShow();
-
+    // 显示歌词
     void onSongShow();
 
     void on_err(QMediaPlayer::Error error);
@@ -193,6 +193,7 @@ private:
     bool                    m_isTop:1;
     bool                    m_isPlayer:1;
     bool                    m_isLrc:1;
+    bool                    m_isShowLrc:1;
     bool                    m_isVideo:1;
     QStringListModel*       m_model;
 

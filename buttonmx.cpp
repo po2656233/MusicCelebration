@@ -11,59 +11,61 @@
 #include <QMouseEvent>
 
 ButtonMx::ButtonMx(QString title, QWidget *parent) :
-  QLabel(parent),m_bHave(false),m_title(title),m_color("")
+    QLabel(parent),m_bHave(false),m_title(title),m_color("")
 {
-  //this->setStyleSheet("background-color: #228B22;");
-  this->setText(m_title);
-  this->setAlignment(Qt::AlignCenter);
-  connect(this, SIGNAL(chooseSIG()), this, SLOT(onChoose()));
+    //this->setStyleSheet("background-color: #228B22;");
+
+    this->setText(m_title);
+    this->setAlignment(Qt::AlignCenter);
+//    this->setFont(QFont("MingLiU", 10, QFont::Bold));
+    connect(this, SIGNAL(chooseSIG()), this, SLOT(onChoose()));
 }
 
 void ButtonMx::setColorCustom(bool have)
 {
-  m_bHave = have;
+    m_bHave = have;
 }
 
 void ButtonMx::setColor(const QString &color)
 {
-  m_color = color;
-  this->setStyleSheet(m_color);
+    m_color = color;
+    this->setStyleSheet(m_color);
 }
 
 
 void ButtonMx::setChecked(bool isCheck)
 {
-  if(isCheck) emit chooseSIG();
+    if(isCheck) emit chooseSIG();
 }
 
 QSize ButtonMx::sizeHint() const
 {
-  return QSize(100,30);
+    return QSize(100,30);
 }
 
 void ButtonMx::mousePressEvent(QMouseEvent *event)
 {
-  if (Qt::LeftButton == event->button()) emit chooseSIG();
+    if (Qt::LeftButton == event->button()) emit chooseSIG();
 }
 
 void ButtonMx::mouseReleaseEvent(QMouseEvent *event)
 {
-  Q_UNUSED(event)
-  this->setStyleSheet(m_color);
+    Q_UNUSED(event)
+    this->setStyleSheet(m_color);
 }
 
 void ButtonMx::enterEvent(QEvent *)
 {
-  m_bHave?this->setStyleSheet("background-color: #4B0082;"):this->setStyleSheet("background-color: #7FFF00;");
+    m_bHave?this->setStyleSheet("background-color: #4BB0A2;"):this->setStyleSheet("background-color: #7FFF00;");
 }
 
 void ButtonMx::leaveEvent(QEvent *)
 {
-  m_bHave?this->setStyleSheet(m_color):this->setStyleSheet("background-color: #DDA0DD;");
+    m_bHave?this->setStyleSheet(m_color):this->setStyleSheet("background-color: #DDA0DD;");
 }
 
 void ButtonMx::onChoose()
 {
-  this->setStyleSheet("background-color: #7FFF00;");
-  //m_bHave?this->setStyleSheet("background-color: #F5FFFA;"):this->setStyleSheet("background-color: #7FFF00;");
+    this->setStyleSheet("background-color: #7FFF00;");
+    //m_bHave?this->setStyleSheet("background-color: #F5FFFA;"):this->setStyleSheet("background-color: #7FFF00;");
 }

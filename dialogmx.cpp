@@ -15,6 +15,7 @@
 DialogMx::DialogMx(QWidget *parent) :
   QDialog(parent)
 {
+  this->setStyleSheet("color:rgb(0,0,0);");
   m_curPos = QPoint(0,0);
 }
 
