@@ -12,6 +12,7 @@
 #include <QApplication>
 #include <windows.h>
 #include <windowsx.h>
+#include <QtDebug>
 DialogMx::DialogMx(QWidget *parent) :
   QDialog(parent)
 {
@@ -49,5 +50,6 @@ void DialogMx::mouseReleaseEvent(QMouseEvent *event)
   event->ignore();
   QWidget::mouseReleaseEvent(event);
 }
+
 
 

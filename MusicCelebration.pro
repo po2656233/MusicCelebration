@@ -27,6 +27,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp\
+    lineeditmx.cpp \
         musicshow.cpp \
     singleapplication.cpp \
     videoview.cpp \
@@ -39,6 +40,7 @@ SOURCES += main.cpp\
     webview.cpp
 
 HEADERS  += musicshow.h \
+    lineeditmx.h \
     singleapplication.h \
     widgetObjName.h \
     videoview.h \

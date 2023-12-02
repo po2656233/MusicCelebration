@@ -9,16 +9,19 @@
 ///////////////////////////////////////////////////////
 #include "buttonmx.h"
 #include <QMouseEvent>
+#include <QDebug>
+#include <QKeyEvent>
 
 ButtonMx::ButtonMx(QString title, QWidget *parent) :
-    QLabel(parent),m_bHave(false),m_title(title),m_color("")
+    QPushButton(parent),m_bHave(false),m_title(title),m_color("")
 {
     //this->setStyleSheet("background-color: #228B22;");
-
+    m_key = 0x00;
     this->setText(m_title);
-    this->setAlignment(Qt::AlignCenter);
-//    this->setFont(QFont("MingLiU", 10, QFont::Bold));
+    //    this->setAlignment(Qt::AlignCenter);
+    //    this->setFont(QFont("MingLiU", 10, QFont::Bold));
     connect(this, SIGNAL(chooseSIG()), this, SLOT(onChoose()));
+    connect(this, SIGNAL(clicked()), this, SIGNAL(chooseSIG()));
 }
 
 void ButtonMx::setColorCustom(bool have)
@@ -42,6 +45,8 @@ QSize ButtonMx::sizeHint() const
 {
     return QSize(100,30);
 }
+
+
 
 void ButtonMx::mousePressEvent(QMouseEvent *event)
 {

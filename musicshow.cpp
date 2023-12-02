@@ -15,6 +15,7 @@
 #include "blinkbtn.h"
 #include "speedcontrol.h"
 #include "webview.h"
+#include "lineeditmx.h"
 
 #include "mylyric.h"
 
@@ -75,22 +76,22 @@ MusicShow::MusicShow(QWidget *parent) :
     m_isLrc(false),m_isShowLrc(true),m_isVideo(false),
     m_duration(0),m_dragPosition(QPoint(0,0))
 {
-
+    
     // 保存歌曲的目录
     m_songsDir = QDir::currentPath()+"\\songs";
     QDir dir(m_songsDir);
     if(!dir.exists())dir.mkdir(m_songsDir);
-
+    
     m_playInfo = new QLabel(tr("播放信息")); //播放信息
     m_title = new BlinkBtn("音乐分享"); //标题
     m_speedControl = new SpeedControl();//进度标题
-
+    
     m_playMode = new QPushButton("PLAY MODE"); //播放模式
     m_loading = new QPushButton("START");  //加载
     m_paused = new QPushButton("PAUSED");   //暂停
     m_play = new QPushButton("PLAY");     //播放
     m_stop = new QPushButton("STOP");     //停止
-
+    
     m_model = new QStringListModel();
     m_listView = new QListView();     // 播放列表
     m_fileList = new QMediaPlaylist();  // 播放资源列表
@@ -98,11 +99,11 @@ MusicShow::MusicShow(QWidget *parent) :
     m_view = new VideoWidget();       // 视频播放
     m_video = new VideoView();        // 视频展示
     m_songLrc = new MyLyric(this);       // 歌词显示
-
+    
     m_lound = new QDial();            // 声音
     m_timeUp = new QLCDNumber();      // 时间
     m_horizontalSlider = new QSlider(Qt::Horizontal);//进度条
-
+    
     m_networdShow = new WebView(this);
     m_layout = new QGridLayout();//布局
     m_popMenu = new QMenu();//右键弹出的菜单
@@ -113,38 +114,38 @@ MusicShow::MusicShow(QWidget *parent) :
     m_actMute = new QAction(this);//静音
     m_actLry = new QAction(this);//显示歌词
     m_actSigleton = new QAction(this);//单窗体
-
-
+    
+    
     this->setMouseTracking(true); // 希望获取到鼠标移动时，光标靠近的位置。
     this->setWindowFlags(Qt::FramelessWindowHint);
     this->resize(800,500);
-
+    
     // 布局
     this->setLayout(m_layout);
-
+    
     //m_layout->addWidget(m_songLrc,1,0,1,1);//歌词
     m_layout->addWidget(m_loading,5,0,1,1);
     m_layout->addWidget(m_speedControl,6,0,1,1);
     m_layout->addWidget(m_title,0,1,1,4);
     m_layout->addWidget(m_video,0,0,5,6);
     m_layout->addWidget(m_listView,1,1,4,4);
-
+    
     QHBoxLayout* hLayout = new QHBoxLayout;
     hLayout->addWidget(m_play);
     hLayout->addWidget(m_paused);
     hLayout->addWidget(m_stop);
     m_layout->addLayout(hLayout,5,1,1,4);
-
+    
     m_layout->addWidget(m_horizontalSlider,6,1,1,4);
     m_layout->addWidget(m_playInfo,0,5,1,1,Qt::AlignHCenter);
     m_layout->addWidget(m_lound,2,5,1,1);
     m_layout->addWidget(m_playMode,5,5,1,1);
     m_layout->addWidget(m_timeUp,6,5,1,1);
-
+    
     // 设置比例：
     //  m_layout->addWidget(m_networdShow,0,1,5,4);
     //  m_networdShow->setHidden(true);
-
+    
     // 界面数据初始化
     m_play->setObjectName(objNames::BUTTON_PLAY);
     m_title->setObjectName(objNames::WIDGET_TITEL);
@@ -160,12 +161,15 @@ MusicShow::MusicShow(QWidget *parent) :
     m_actBorders->setText(tr("万寿无疆"));
     m_actLry->setText(tr("英花逐流"));
     m_actQuit->setText(tr("闭月羞花"));
-
+    
     // 快捷键
-    m_play->setShortcut(QKeySequence(Qt::Key_Return));
+    m_play->setShortcut(QKeySequence(Qt::Key_P));
     m_paused->setShortcut(QKeySequence(Qt::Key_Space));
-    m_stop->setShortcut(QKeySequence(Qt::Key_Escape));
-
+    m_stop->setShortcut(QKeySequence(Qt::Key_Backspace));
+    m_loading->setShortcut(QKeySequence(Qt::Key_S));
+    m_actQuit->setShortcut(QKeySequence(Qt::Key_F4));
+    m_playMode->setShortcut(QKeySequence(Qt::Key_M));
+    
     // 设置字体颜色
 
     QPalette pa;
@@ -178,12 +182,12 @@ MusicShow::MusicShow(QWidget *parent) :
     m_loading->setPalette(pa);
     pa.setColor(QPalette::ButtonText,QColor(125,0,125));
     m_playMode->setPalette(pa);
-
+    
     QFont font = m_loading->font();
     font.setBold(true);
     m_loading->setFont(font);
     m_playMode->setFont(font);
-
+    
     // 播放器
     m_player->setMuted(false);//是否静音
     m_player->setVideoOutput(m_view);
@@ -197,8 +201,8 @@ MusicShow::MusicShow(QWidget *parent) :
     m_listView->setWordWrap(true);
     m_listView->setModel(m_model);
     m_listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-
-
+    
+    
     // 关联信号和槽
     //加载文件
     connect(m_loading,SIGNAL(clicked()),this,SLOT(onLoading()));
@@ -208,18 +212,18 @@ MusicShow::MusicShow(QWidget *parent) :
     connect(m_paused,SIGNAL(clicked(bool)),m_player,SLOT(pause()));
     //点击停止
     connect(m_stop,SIGNAL(clicked(bool)),m_player,SLOT(stop()));
-
+    
     //文件列表
     connect(m_listView,SIGNAL(pressed(QModelIndex)),this,SLOT(onSelectitem_singal(QModelIndex)));
     connect(m_listView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(onSelectitem(QModelIndex)));
     connect(m_player, SIGNAL(durationChanged(qint64)), this, SLOT(onDuration(qint64)));
     connect(m_player, SIGNAL(positionChanged(qint64)), this, SLOT(onPlayTimer(qint64)));
-
+    
     //进度条
     connect(m_horizontalSlider, SIGNAL(sliderMoved(int)), this, SLOT(onSeek(int)));
     //声音
     connect(m_lound,SIGNAL(valueChanged(int)),this, SLOT(on_lound_sliderMoved(int)));
-
+    
     //播放模式
     connect(m_playMode,SIGNAL(clicked(bool)),this,SLOT(on_playModel_clicked()));
     //媒体状态
@@ -227,7 +231,7 @@ MusicShow::MusicShow(QWidget *parent) :
     connect(m_player,SIGNAL(mediaStatusChanged(QMediaPlayer::MediaStatus)),this,SLOT(onMediastatus(QMediaPlayer::MediaStatus)) ) ;
     connect(m_player, SIGNAL(error(QMediaPlayer::Error)), this, SLOT(on_err(QMediaPlayer::Error)));
     connect(m_fileList, SIGNAL(currentIndexChanged(int)),this, SLOT(onSingTheSong(int)));
-
+    
     //右键弹框
     connect(m_actHide, &QAction::triggered, this, &MusicShow::close);
     connect(m_actMute, SIGNAL(triggered(bool)), this, SLOT(onMuted(bool)));
@@ -387,7 +391,7 @@ void MusicShow::randomPlay()
     int sec = static_t.msecsTo(time);
     qsrand(sec);
     int math = qrand()% m_songList.size();
-
+    
     QString fileName = m_songList.at(math).fileName();
     //playSong(fileName);
     for (int i = 0; i < m_model->rowCount(); i++)
@@ -421,10 +425,10 @@ void MusicShow::sigletonShow(bool isShow)
 
 bool MusicShow::checkSong(const QString &songName)
 {
-
+    
     if(songName.isNull()||songName.isEmpty())return false;
     synchronyLrc(songName);
-
+    
     return( songName.contains(".mp3") || songName.contains(".ape")|| songName.contains(".flac"));
 }
 
@@ -444,12 +448,12 @@ QStringList MusicShow::getAllFiles(const QString &strDir)
         <<"*.ogg"<<"*.dat"\
        <<"*.flv"<<"*.gif"<<"*.asf"<<"*.flac";
     dir.setNameFilters(fileList);
-
+    
     // 目录
     m_fileList->clear();
     m_songList.clear();
     m_songList = dir.entryInfoList(fileList, QDir::Files|QDir::AllEntries);
-
+    
     // 读取文件信息列表
     fileList.clear();
     foreach (QFileInfo info, m_songList)
@@ -526,8 +530,8 @@ void MusicShow::onStatus(QMediaPlayer::State status)
     default:
         break;
     }
-
-
+    
+    
 }
 /*
 // 键盘事件（调整播放状态）
@@ -609,7 +613,7 @@ void MusicShow::mouseMoveEvent(QMouseEvent *event)
     QRect rect = this->rect();
     QPoint tl = mapToGlobal(rect.topLeft());
     QPoint rb = mapToGlobal(rect.bottomRight());
-
+    
     if(!isLeftPressDown)
     {
         this->region(gloPoint);
@@ -682,12 +686,12 @@ void MusicShow::mouseReleaseEvent(QMouseEvent *event)
     isLeftPressDown = false;
     m_dragPosition = QPoint(0,0);
     QApplication::restoreOverrideCursor();
-
+    
     if (m_isPlayer && m_isVideo)
     {
         listTurnVedio(m_isVideo);
     }
-
+    
     event->ignore();
     QWidget::mouseReleaseEvent(event);
 }
@@ -702,9 +706,9 @@ void MusicShow::contextMenuEvent(QContextMenuEvent *event)
     m_popMenu->addAction(m_actLry);
     m_popMenu->addAction(m_actSigleton);
     m_popMenu->addAction(m_actQuit);
-
-
-
+    
+    
+    
     //菜单出现的位置为当前鼠标的位置
     m_popMenu->exec(QCursor::pos());
     event->accept();
@@ -716,7 +720,7 @@ void MusicShow::closeEvent(QCloseEvent *event)
     this->setGeometry(this->geometry());
     hide();
     emit signalHide();
-
+    
 }
 
 void MusicShow::wheelEvent(QWheelEvent *event)
@@ -736,49 +740,54 @@ void MusicShow::wheelEvent(QWheelEvent *event)
 void MusicShow::onLoading()
 {
     DialogMx *loadDlg = new DialogMx(this);
-    loadDlg->setGeometry(this->pos().x()+10,this->pos().y()+this->height()-170,100,100);
+    loadDlg->setGeometry(this->pos().x()+10,this->pos().y()+this->height()-170,m_loading->width(),100);
     if(m_isTop)
         loadDlg->setWindowFlags(Qt::WindowStaysOnTopHint|Qt::Dialog|Qt::FramelessWindowHint);
     else
         loadDlg->setWindowFlags(Qt::Dialog|Qt::FramelessWindowHint);
-
+    
     loadDlg->setAttribute(Qt::WA_DeleteOnClose,true);
     loadDlg->setModal(true);
     loadDlg->showNormal();
     //m_layout->addWidget(loadDlg,4,5,1,1,Qt::AlignRight);
-
+    
     ButtonMx* btnLocal = new ButtonMx("本地导入",loadDlg);
-    ButtonMx* btnWeb = new ButtonMx("加载网络资源",loadDlg);
+    ButtonMx* btnWeb = new ButtonMx("网络资源",loadDlg);
     // 字体样式
-    QFont loadFt = QFont("STLiti", 10, QFont::DemiBold);
+    QFont loadFt = QFont("STLiti", 10);
     QPalette loadPa;
-    loadPa.setColor(QPalette::WindowText,QColor(100,0,138));
-
+    loadPa.setColor(QPalette::WindowText,QColor(200,0,138));
+    
     btnLocal->setPalette(loadPa);
     btnLocal->setFont(loadFt);
-
+    
     btnWeb->setPalette(loadPa);
     btnWeb->setFont(loadFt);
-
+    
     QVBoxLayout* fLayout = new QVBoxLayout;
     fLayout->addWidget(btnLocal);
     fLayout->addWidget(btnWeb);
     loadDlg->setLayout(fLayout);
 
+    btnLocal->setShortcut(QKeySequence(Qt::Key_Up));
+    btnWeb->setShortcut(QKeySequence(Qt::Key_Down));
+
     connect(btnLocal, &ButtonMx::chooseSIG, this, [=](){
         delete loadDlg;
         on_loading_dir();
     });
-
+    
     connect(btnWeb,&ButtonMx::chooseSIG, this, [=](){
         delete loadDlg;
         on_loading_web();
     });
-
-
+    connect(loadDlg,&QDialog::accepted, this, [=](){
+        delete loadDlg;
+    });
+    
     //  isDir?on_loading_dir():on_loading_single();
     //  isDir = !isDir;
-
+    
 }
 
 void MusicShow::on_loading_dir()
@@ -787,8 +796,8 @@ void MusicShow::on_loading_dir()
     m_player->stop();
     //  m_networdShow->stop();
     //  m_networdShow->setHidden(true);
-
-
+    
+    
     QString fileName = QFileDialog::getExistingDirectory(this,"Music",m_songsDir,QFileDialog::ReadOnly);
     if (fileName.isNull() || fileName.isEmpty())return;
     getAllFiles(fileName);
@@ -798,40 +807,59 @@ void MusicShow::on_loading_dir()
 void MusicShow::on_loading_web()
 {
     m_loading->setHidden(true);
-    QLineEdit* inputWeb = new QLineEdit();
+    LineEditMx* inputWeb = new LineEditMx(this);
     inputWeb->setFixedWidth(m_loading->width());
     inputWeb->setPlaceholderText("请录入歌名或网址");
     m_layout->addWidget(inputWeb,2,0,1,1);
     isLoadNow = false;
-    connect(inputWeb,&QLineEdit::returnPressed,this,[=](){
+    inputWeb->show();
+    connect(inputWeb,&LineEditMx::returnPressed,this,[=](){
         // 禁止频繁 回车
         if(isLoadNow)return;
         isLoadNow = !isLoadNow;
         // 解析地址
-        QString webAddr = inputWeb->text();
+        QString text = inputWeb->text();
+        QString webAddr = text;
+        inputWeb->setEnabled(false);
+        inputWeb->setText("正在加载资源...");
         if (webAddr.isEmpty()){
             m_loading->setHidden(false);
             if (inputWeb)inputWeb->deleteLater();
             return;
         }
         if (webAddr.left(4) != "http")webAddr = "http://"+webAddr;
-
+        
         // 获取歌曲
         QString singName = m_networdShow->setUrl(webAddr,m_songsDir);
-
-        if(singName.isEmpty())return;
+       isLoadNow = false;
+       inputWeb->setEnabled(true);
+       inputWeb->setFocus();
+        if(singName.isEmpty()){
+            if(!text.contains("加载失败")){
+                text = text+"加载失败";
+            }
+            inputWeb->setText(text);
+            return;
+        }
+        if(!text.contains("加载成功")){
+           text = text+"加载成功";
+        }
+        inputWeb->setText(text);
 
         // 停止当前曲目
         m_fileList->clear();
-        //        m_player->stop();
-
+        // m_player->stop();
+        
         // 添加入曲目列表
         QFileInfo info(singName);
         m_fileList->addMedia( QUrl(info.absoluteFilePath()));
         m_model->setStringList(QStringList(info.fileName()));
         m_loading->setHidden(false);
-
         if (inputWeb)inputWeb->deleteLater();
+    });
+    connect(inputWeb,&LineEditMx::over,this,[=](){
+         m_loading->setHidden(false);
+         if (inputWeb)inputWeb->deleteLater();
     });
 }
 
@@ -905,15 +933,15 @@ void MusicShow::region(const QPoint &cursorGlobalPoint)
 {
     // 获取窗体在屏幕上的位置区域，tl为topleft点，rb为rightbottom点
     QRect rect = this->rect();
-
+    
     //对角线两个点
     QPoint tl = mapToGlobal(rect.topLeft());
     QPoint rb = mapToGlobal(rect.bottomRight());
-
+    
     //当前的光标位置
     int x = cursorGlobalPoint.x();
     int y = cursorGlobalPoint.y();
-
+    
     if(tl.x() + PADDING >= x && tl.x() <= x && (tl.y() + PADDING) >= y && tl.y() <= y)
     {
         // 左上角
@@ -1000,7 +1028,7 @@ bool MusicShow::nativeEvent(const QByteArray &eventType, void *message, long *re
       return true;
     }
   return QWidget::nativeEvent(eventType, message, result);
-
+  
 }*/
 
 // 音量调节
@@ -1030,13 +1058,13 @@ void MusicShow::onDuration(qint64 duration)
 void MusicShow::onPlayTimer(qint64 value)
 {
     int currentInfo = value/1000;
-
+    
     // 滚动条设置
     if (!m_horizontalSlider->isSliderDown())
     {
         m_horizontalSlider->setValue(currentInfo);
     }
-
+    
     // 时间设置
     if (currentInfo || m_duration)
     {
@@ -1049,10 +1077,10 @@ void MusicShow::onPlayTimer(qint64 value)
         m_timeUp->display( singTime );
         m_playInfo->setText( totalTime.toString(format) );
     }
-
+    
     // 歌词同步
     if (m_isLrc) m_songLrc->updateTime(value);
-
+    
 }
 
 // 滚动条
@@ -1093,7 +1121,7 @@ void MusicShow::onSingTheSong(int index)
             m_listView->setCurrentIndex(m_model->index(i));
         }
     }
-
+    
     m_player->play();
 }
 
@@ -1102,7 +1130,7 @@ void MusicShow::onSingTheSong(int index)
 // 窗口边框设置
 void MusicShow::on_noBoardStyle()
 {
-
+    
     if(isNoBorder)
     {
         m_actBorders->setText("边疆万里");
@@ -1120,7 +1148,7 @@ void MusicShow::on_noBoardStyle()
 
 void MusicShow::on_topWindow()
 {
-
+    
     if(m_isTop)
     {
         m_actTop->setText("拼醉花前");
@@ -1145,22 +1173,27 @@ void MusicShow::on_topWindow()
 void MusicShow::on_playModel_clicked()
 {
     DialogMx *addressGlg = new DialogMx(this);
-    addressGlg->setGeometry(this->pos().x()+this->width()-120,this->pos().y()+this->height()-250,100,180);
+    addressGlg->setGeometry(this->pos().x()+m_playMode->x(),this->pos().y()+m_playMode->y()-178-m_playMode->height(),m_playMode->width(),180);
     if(m_isTop)
         addressGlg->setWindowFlags(Qt::WindowStaysOnTopHint|Qt::Dialog|Qt::FramelessWindowHint);
     else
         addressGlg->setWindowFlags(Qt::Dialog|Qt::FramelessWindowHint);
-
+    
     addressGlg->setAttribute(Qt::WA_DeleteOnClose,true);
     addressGlg->setModal(true);
     addressGlg->showNormal();
     //m_layout->addWidget(addressGlg,4,5,1,1,Qt::AlignRight);
-
+    
     ButtonMx* btnOnce = new ButtonMx("单曲播放",addressGlg);
     ButtonMx* btnCurLoop = new ButtonMx("单曲循环",addressGlg);
     ButtonMx* btnSequential = new ButtonMx("顺序播放",addressGlg);
     ButtonMx* btnListLoop = new ButtonMx("列表循环",addressGlg);
     ButtonMx* btnRandom = new ButtonMx("随机播放",addressGlg);
+    btnRandom->setShortcut(QKeySequence(Qt::Key_0));
+    btnListLoop->setShortcut(QKeySequence(Qt::Key_4));
+    btnSequential->setShortcut(QKeySequence(Qt::Key_3));
+    btnCurLoop->setShortcut(QKeySequence(Qt::Key_2));
+    btnOnce->setShortcut(QKeySequence(Qt::Key_1));
 
     QVBoxLayout* fLayout = new QVBoxLayout;
     fLayout->addWidget(btnOnce);
@@ -1169,6 +1202,7 @@ void MusicShow::on_playModel_clicked()
     fLayout->addWidget(btnListLoop);
     fLayout->addWidget(btnRandom);
 
+    
     addressGlg->setLayout(fLayout);
     switch (m_fileList->playbackMode())
     {
@@ -1212,7 +1246,7 @@ void MusicShow::on_playModel_clicked()
         playModel(4);
         addressGlg->deleteLater();
     });
-
+    
 }
 
 void MusicShow::OnTrayActivated(QSystemTrayIcon::ActivationReason reason)
@@ -1244,7 +1278,7 @@ void MusicShow::onSigletonShow()
         }
         isSigleton = !isSigleton;
     }
-
+    
 }
 
 void MusicShow::onSongShow()
@@ -1271,7 +1305,7 @@ void MusicShow::on_err(QMediaPlayer::Error error)
       }
     m_player = new QMediaPlayer;
     m_player->setVideoOutput(m_view);*/
-
+    
 }
 
 void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
@@ -1311,5 +1345,5 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
     default:
         break;
     }
-
+    
 }

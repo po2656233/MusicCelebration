@@ -64,24 +64,25 @@ QString WebView::setUrl(const QString &web,QString dir)
 
     //将读取到的信息写入文件
     QByteArray sourceCode=reply->readAll();
+    reply->deleteLater();
+    if(sourceCode.size()>10){
+        QMessageBox::information(this,tr("提示"),web+"网站数据获取成功！",QMessageBox::Ok);
+    }
+    else{
+        QMessageBox::information(this,tr("提示"),web+"网站数据获取失败！",QMessageBox::Ok);
+        return "";
+    }
+
+    // 保存文件
     QString fileName =QDir::toNativeSeparators(dir+"\\"+url.fileName());
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
     file.write(sourceCode);
-    if(file.size()>10){
-        QMessageBox::information(this,tr("提示"),tr("网站数据获取成功！"),QMessageBox::Ok);
-    }
-    else{
-        QMessageBox::information(this,tr("提示"),tr("网站数据获取失败！"),QMessageBox::Ok);
-        url = "";
-    }
-
-    //文件名
     file.close();
     if(file.size()<10){
         file.remove();
     }
-    reply->deleteLater();
+
     qDebug()<<"当前请求的网络地址"<<web<<" 保存为:"<<fileName;
     return fileName;
 }

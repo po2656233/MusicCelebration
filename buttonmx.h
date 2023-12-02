@@ -10,9 +10,9 @@
 #ifndef BUTTONMX_H
 #define BUTTONMX_H
 
-#include <QLabel>
+#include <QPushButton>
 
-class ButtonMx : public QLabel
+class ButtonMx : public QPushButton
 {
   Q_OBJECT
 public:
@@ -34,6 +34,7 @@ private:
   bool m_bHave;
   QString m_title;
   QString m_color;
+  QKeySequence m_key;
 };
 
 #endif // BUTTONMX_H
