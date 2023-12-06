@@ -313,7 +313,6 @@ MusicShow::MusicShow(QWidget *parent) :
     connect(m_speedControl,SIGNAL(sigSlowDown()),this,SLOT(onSlowDown()));
     connect(m_speedControl,SIGNAL(sigRecover()),this,SLOT(onRecover()));
     connect(m_speedControl,SIGNAL(sigQuickUp()),this,SLOT(onQuickUp()));
-    connect(m_speedControl,SIGNAL(sigQuickUp()),m_fileList,SLOT(next()));
 
     // 窗口模式切换
     connect(m_title,SIGNAL(doubleClicked()),this,SLOT(showFullScreen()));
