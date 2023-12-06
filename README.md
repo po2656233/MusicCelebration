@@ -17,7 +17,7 @@ Qt制作的一款音乐播放器
 
 ![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20053030.png)
 
-![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20053242.png)
+![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20055501.png)
 
 ---声明---      
 禁止用于商业用途，禁止用于违反国家法律法规的行为，禁止用于任何非法目的
