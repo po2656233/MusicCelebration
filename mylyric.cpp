@@ -26,11 +26,13 @@ MyLyric::MyLyric(QWidget *parent) :
   setAttribute(Qt::WA_TranslucentBackground);
   setText(QStringLiteral("歌词信息"));
   setAlignment(Qt::AlignCenter);
-  // 固定部件大小
-  setMaximumSize(1000, 60);
-  setMinimumSize(1000, 60);
-  resize(1000, 60);
+
+  // 调整大小
   QDesktopWidget* desktop = QApplication::desktop();
+//  QRect screenRect = desktop->screenGeometry();
+  setMaximumSize(desktop->width()/2, 60);// 固定部件大小
+  setMinimumSize(desktop->width()/2, 60);
+  resize(desktop->width(), 60);
   move((desktop->width() - this->width()) / 2, desktop->height() * 3 / 4);
 
   // 歌词的线性渐变填充
@@ -223,6 +225,7 @@ void MyLyric::mousePressEvent(QMouseEvent *event)
 {
   if (event->button() == Qt::LeftButton)
     m_offset = event->globalPos() - frameGeometry().topLeft();
+  QLabel::mousePressEvent(event);
 }
 void MyLyric::mouseMoveEvent(QMouseEvent *event)
 {
@@ -230,6 +233,7 @@ void MyLyric::mouseMoveEvent(QMouseEvent *event)
       setCursor(Qt::PointingHandCursor);
       move(event->globalPos() - m_offset);
     }
+  QLabel::mouseMoveEvent(event);
 }
 
 

@@ -14,7 +14,7 @@ LineEditMx::~LineEditMx()
 
 void LineEditMx::keyPressEvent(QKeyEvent *event)
 {
-    if(event->key()==Qt::Key_Escape){
+    if(event->key()==Qt::Key_Escape/* || event->key()==Qt::Key_Return || event->key()==Qt::Key_Enter*/){
         emit over();
     }
     event->ignore();

@@ -66,7 +66,7 @@ QString WebView::setUrl(const QString &web,QString dir)
     QByteArray sourceCode=reply->readAll();
     reply->deleteLater();
     if(sourceCode.size()>10){
-        QMessageBox::information(this,tr("提示"),web+"网站数据获取成功！",QMessageBox::Ok);
+//        QMessageBox::information(this,tr("提示"),web+"网站数据获取成功！",QMessageBox::Ok);
     }
     else{
         QMessageBox::information(this,tr("提示"),web+"网站数据获取失败！",QMessageBox::Ok);

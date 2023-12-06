@@ -57,3 +57,8 @@ RESOURCES += \
 
 RC_FILE = iconExe.rc
 
+DISTFILES += \
+    py/form.py \
+    py/widget.py
+
+

@@ -37,6 +37,7 @@ class QDial;
 class QMenu;
 class QWebView;
 class QLineEdit;
+class QGraphicsOpacityEffect;
 QT_END_NAMESPACE
 
 class VideoView;
@@ -75,6 +76,10 @@ public:
     QStringList getAllFiles(const QString& dir);
     // 同步歌词
     void synchronyLrc(const QString &fileName);
+
+    // 设置提示信息
+    void setHint(QString fileName,bool isRightIn = true);
+
 protected:
     // 键盘事件——控制状态
     //void keyPressEvent(QKeyEvent *event);
@@ -134,10 +139,21 @@ private slots:
     void onSigletonShow();
     // 显示歌词
     void onSongShow();
+    // 播放(需检测是否是视频)
+    void onPlay();
+
+
+
+    // 文本淡出
+    void onOpacity();
+    // 关闭定时器
+    void onTimeOut();
 
     void on_err(QMediaPlayer::Error error);
+
 signals:
     void signalHide();
+    void signalOpacityStop();
 
 private:
     void region(const QPoint &cursorGlobalPoint);//矩形
@@ -151,11 +167,12 @@ private:
 
     // 界面成员
     //***基本信息
-    Direction               m_direct;   //方向
-    QLabel*                 m_playInfo; //播放信息
-    BlinkBtn*               m_title;    //标题
-    SpeedControl*           m_speedControl;//进度标题
-
+    Direction               m_direct;       //方向
+    QLabel*                 m_playInfo;     //播放信息
+    QLabel*                 m_hintInfo;     //提示信息
+    BlinkBtn*               m_title;        //标题
+    SpeedControl*           m_speedControl; //进度标题
+    QTimer*                 m_timer;        //定时器
     //***曲目状态
     QDial*                  m_lound;    //声音
     QLCDNumber*             m_timeUp;   //时间
@@ -187,7 +204,7 @@ private:
     QAction*                m_actLry;    // 显示歌词
     QAction*                m_actSigleton;// 单窗体
     WebView*                m_networdShow;// 网页
-
+    QGraphicsOpacityEffect* m_effect;     // 效果控制
     // 数据成员
     //***基础信息
     bool                    m_isTop:1;
@@ -195,7 +212,9 @@ private:
     bool                    m_isLrc:1;
     bool                    m_isShowLrc:1;
     bool                    m_isVideo:1;
+    float                   m_opaclevel;
     QStringListModel*       m_model;
+
 
     qint64                  m_duration;// 时间周期
     QUrl                    m_playing; // 当前播放的文件

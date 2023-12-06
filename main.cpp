@@ -19,6 +19,7 @@
 #include <QIcon>
 #include <QFileIconProvider>
 
+
 int main(int argc, char *argv[])
 {
   SingleApplication a(argc, argv);

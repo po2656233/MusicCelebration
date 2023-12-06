@@ -23,6 +23,7 @@ public:
   void setTextSize(int size);
   void setBold(bool isBold);
   void setOrder(bool isOrder);
+  QString getText();
 public slots:
   // 字体内容
   void setText(const QString &text);

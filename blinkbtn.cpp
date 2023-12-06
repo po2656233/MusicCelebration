@@ -50,7 +50,12 @@ void BlinkBtn::setBold(bool isBold)
 
 void BlinkBtn::setOrder(bool isOrder)
 {
-  m_order = isOrder;
+    m_order = isOrder;
+}
+
+QString BlinkBtn::getText()
+{
+    return *m_pszText;
 }
 
 void BlinkBtn::setText(const QString &text)
