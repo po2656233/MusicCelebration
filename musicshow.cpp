@@ -1263,7 +1263,13 @@ void MusicShow::onSlowDown()
         m_fileList->previous();
         return;
     }
+    if(1.0 < g_rate){
+        g_rate = 1.0;
+    }
     g_rate -= 0.1;
+    if (g_rate<=0.0){
+        g_rate = 1.0;
+    }
     emit m_player->playbackRateChanged(g_rate);
 }
 
@@ -1285,7 +1291,10 @@ void MusicShow::onQuickUp()
         m_fileList->next();
         return;
     }
-    g_rate += 1.0;
+    if(g_rate<1.0){
+        g_rate = 1.0;
+    }
+    g_rate += 0.1;
     emit m_player->playbackRateChanged(g_rate);
 }
 
