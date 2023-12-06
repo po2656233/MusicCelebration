@@ -87,9 +87,10 @@ QStringList videoList = QStringList()<<"*.mp4"<<"*.mov"<<"*.mkv"\
 
 MusicShow::MusicShow(QWidget *parent) :
     QWidget(parent),m_isTop(false),
-    m_isLrc(false),m_isShowLrc(true),m_isVideo(false),m_opaclevel(0.0),
-    m_duration(0),m_dragPosition(QPoint(0,0))
-{
+    m_isLrc(false),m_isShowLrc(true),
+    m_isVideo(false),m_isNext(true),
+    m_opaclevel(0.0),m_duration(0),
+    m_dragPosition(QPoint(0,0)){
     
     // 保存歌曲的目录
     m_songsDir = QDir::currentPath()+"\\songs";
@@ -144,6 +145,7 @@ MusicShow::MusicShow(QWidget *parent) :
     this->setLayout(m_layout);
     //    m_layout->setAlignment(Qt::AlignAbsolute);
     //m_layout->addWidget(m_songLrc,1,0,1,1);//歌词
+
     m_layout->addWidget(m_loading,5,0,1,1);
     m_layout->addWidget(m_speedControl,6,0,1,1);
     m_layout->addWidget(m_title,0,1,1,4);
@@ -311,6 +313,8 @@ MusicShow::MusicShow(QWidget *parent) :
     connect(m_speedControl,SIGNAL(sigSlowDown()),this,SLOT(onSlowDown()));
     connect(m_speedControl,SIGNAL(sigRecover()),this,SLOT(onRecover()));
     connect(m_speedControl,SIGNAL(sigQuickUp()),this,SLOT(onQuickUp()));
+    connect(m_speedControl,SIGNAL(sigQuickUp()),m_fileList,SLOT(next()));
+
     // 窗口模式切换
     connect(m_title,SIGNAL(doubleClicked()),this,SLOT(showFullScreen()));
     connect(m_title,SIGNAL(normalShow()),this,SLOT(showNormal()));
@@ -601,6 +605,7 @@ void MusicShow::synchronyLrc(const QString &fileName)
 void MusicShow::setHint(QString hint, bool isRightIn, int showtime)
 {
     m_timer->stop();
+    m_hintInfo->clear();
     m_effect->setOpacity(1);
     m_effect->update();
     m_hintInfo->setText(hint.split("", QString::SkipEmptyParts).join("\n"));
@@ -643,7 +648,7 @@ void MusicShow::onSelectitem_singal(const QModelIndex &index)
 // 播放状态
 void MusicShow::onStatus(QMediaPlayer::State status)
 {
-    onRecover(); //标准速率
+//    onRecover(); //标准速率
     switch (status)
     {
     case QMediaPlayer::PlayingState:
@@ -744,6 +749,7 @@ void MusicShow::mousePressEvent(QMouseEvent *event)
         }
     }
     event->ignore();
+
 }
 
 void MusicShow::mouseMoveEvent(QMouseEvent *event)
@@ -1078,6 +1084,7 @@ void MusicShow::listTurnVedio(bool isVideo)
 {
     m_title->setHidden(isVideo);
     m_playInfo->setHidden(isVideo);
+    m_hintInfo->setHidden(isVideo);
     // m_speedControl->setHidden(isVideo);
     // m_loading->setHidden(isVideo);
     m_lound->setHidden(isVideo);
@@ -1253,18 +1260,32 @@ void MusicShow::onSeek(int seek)
 
 void MusicShow::onSlowDown()
 {
+    if(m_isNext){
+        m_fileList->previous();
+        return;
+    }
     g_rate -= 0.1;
     emit m_player->playbackRateChanged(g_rate);
 }
 
 void MusicShow::onRecover()
 {
-    g_rate = 1.0;
-    emit m_player->playbackRateChanged(g_rate);
+    if(!m_isNext){
+        g_rate = 1.0;
+        emit m_player->playbackRateChanged(g_rate);
+        setHint("左前首 右下一首",false);
+    }else{
+        setHint("左慢 右快",false);
+    }
+    m_isNext = !m_isNext;
 }
 
 void MusicShow::onQuickUp()
 {
+    if(m_isNext){
+        m_fileList->next();
+        return;
+    }
     g_rate += 1.0;
     emit m_player->playbackRateChanged(g_rate);
 }
@@ -1478,10 +1499,11 @@ void MusicShow::onSongShow()
 // 播放
 void MusicShow::onPlay()
 {
-    m_hintInfo->hide();
     listTurnVedio( !checkSong(m_fileList->currentMedia().canonicalUrl().toString()) );
     if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
         m_player->play();
+    else
+        m_fileList->next();
 }
 
 void MusicShow::onOpacity()
@@ -1548,8 +1570,6 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         break;
     }
     case QMediaPlayer::NoMedia:{
-        QModelIndex index = m_listView->currentIndex();
-        m_model->removeRow(index.row());
         qDebug()<<400;
         break;
     }

@@ -171,7 +171,7 @@ private:
     QLabel*                 m_playInfo;     //播放信息
     QLabel*                 m_hintInfo;     //提示信息
     BlinkBtn*               m_title;        //标题
-    SpeedControl*           m_speedControl; //进度标题
+    SpeedControl*           m_speedControl; //播放速度控制
     QTimer*                 m_timer;        //定时器
     //***曲目状态
     QDial*                  m_lound;    //声音
@@ -201,10 +201,10 @@ private:
     QAction*                m_actTop;     // 置顶
     QAction*                m_actHide;    // 隐藏
     QAction*                m_actMute;    // 静音
-    QAction*                m_actLry;    // 显示歌词
+    QAction*                m_actLry;     // 显示歌词
     QAction*                m_actSigleton;// 单窗体
     WebView*                m_networdShow;// 网页
-    QGraphicsOpacityEffect* m_effect;     // 效果控制
+    QGraphicsOpacityEffect* m_effect;     // 提示效果控制
     // 数据成员
     //***基础信息
     bool                    m_isTop:1;
@@ -212,6 +212,7 @@ private:
     bool                    m_isLrc:1;
     bool                    m_isShowLrc:1;
     bool                    m_isVideo:1;
+    bool                    m_isNext:1;
     float                   m_opaclevel;
     QStringListModel*       m_model;
 
