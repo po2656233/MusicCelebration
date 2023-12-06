@@ -1267,7 +1267,7 @@ void MusicShow::onSlowDown()
         g_rate = 1.0;
     }
     g_rate -= 0.1;
-    if (g_rate<=0.0){
+    if (g_rate<=0.1){
         g_rate = 0.1;
     }
     emit m_player->playbackRateChanged(g_rate);
@@ -1295,7 +1295,7 @@ void MusicShow::onQuickUp()
         g_rate = 1.0;
     }
     g_rate += 0.1;
-    if (4.4<=g_rate){
+    if (4.3<=g_rate){
         g_rate = 4.3;
     }
     emit m_player->playbackRateChanged(g_rate);
