@@ -137,7 +137,7 @@ MusicShow::MusicShow(QWidget *parent) :
 
     m_title->setFixedHeight(85);
     m_playInfo->setFixedHeight(85);
-//    m_lound->setMinimumHeight(120);
+    //    m_lound->setMinimumHeight(120);
     //    m_listView->setMinimumWidth(m_play->minimumWidth()+m_paused->minimumWidth()+m_stop->minimumWidth());
 
     // 布局
@@ -595,7 +595,7 @@ void MusicShow::synchronyLrc(const QString &fileName)
 
     // 展示歌词
     if (!m_isLrc){
-        m_songLrc->setText(QStringLiteral("歌曲(无词):")+songName);
+        m_songLrc->setText(QStringLiteral("歌曲(无词):")+info.fileName());
     }
     if(m_isShowLrc) m_songLrc->show();
 }
@@ -609,7 +609,7 @@ void MusicShow::setHint(QString hint, bool isRightIn)
     if(isRightIn){
         isLighterIn = isRightIn;
         m_opaclevel = 0;
-        m_timer->start(8);
+        m_timer->start(100);
     }
 }
 // 选择列表当中的曲目
@@ -1539,11 +1539,18 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         qDebug()<<200;
         break;
     case QMediaPlayer::InvalidMedia:
+    {
         qDebug()<<300;
+        QModelIndex index = m_listView->currentIndex();
+        m_model->removeRow(index.row());
         break;
-    case QMediaPlayer::NoMedia:
+    }
+    case QMediaPlayer::NoMedia:{
+        QModelIndex index = m_listView->currentIndex();
+        m_model->removeRow(index.row());
         qDebug()<<400;
         break;
+    }
     case QMediaPlayer::LoadingMedia:
         sigletonShow(false);//正常窗体
         qDebug()<<500;
