@@ -153,7 +153,6 @@ private slots:
 
 signals:
     void signalHide();
-//    void signalOpacityStop();
 
 private:
     void region(const QPoint &cursorGlobalPoint);//矩形

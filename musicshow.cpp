@@ -187,7 +187,7 @@ MusicShow::MusicShow(QWidget *parent) :
     m_actHide->setText(tr("思念于心"));
     m_actSigleton->setText(tr("一幕了然"));
     m_actBorders->setText(tr("万寿无疆"));
-    m_actLry->setText(tr("英花逐流"));
+    m_actLry->setText(tr("暗流涌动"));
     m_actQuit->setText(tr("闭月羞花"));
     
     // 快捷键
@@ -596,7 +596,7 @@ void MusicShow::synchronyLrc(const QString &fileName)
 
     // 展示歌词
     if (!m_isLrc){
-        m_songLrc->setText(QStringLiteral("歌曲(无词):")+info.fileName());
+        m_songLrc->setText(QStringLiteral("(无词):")+info.fileName());
     }
     if(m_isShowLrc) m_songLrc->show();
 }
@@ -1499,10 +1499,10 @@ void MusicShow::onSongShow()
 {
     if(m_isShowLrc) {
         m_songLrc->setHidden(true);
-        m_actLry->setText(tr("暗流涌动"));
+        m_actLry->setText(tr("英花逐流"));
     }else{
         m_songLrc->setHidden(false);
-        m_actLry->setText(tr("英花逐流"));
+        m_actLry->setText(tr("暗流涌动"));
     }
     m_isShowLrc = !m_isShowLrc;
 }
