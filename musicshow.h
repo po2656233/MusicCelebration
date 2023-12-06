@@ -78,7 +78,7 @@ public:
     void synchronyLrc(const QString &fileName);
 
     // 设置提示信息
-    void setHint(QString fileName,bool isRightIn = true);
+    void setHint(QString fileName, bool isRightIn = true,int showtime = 30);
 
 protected:
     // 键盘事件——控制状态
@@ -153,7 +153,7 @@ private slots:
 
 signals:
     void signalHide();
-    void signalOpacityStop();
+//    void signalOpacityStop();
 
 private:
     void region(const QPoint &cursorGlobalPoint);//矩形

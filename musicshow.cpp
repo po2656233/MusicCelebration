@@ -131,7 +131,7 @@ MusicShow::MusicShow(QWidget *parent) :
     m_actLry = new QAction(this);//显示歌词
     m_actSigleton = new QAction(this);//单窗体
     m_effect = new QGraphicsOpacityEffect(this);//效果控制
-    
+    m_hintInfo -> setGraphicsEffect(m_effect);
     this->setMouseTracking(true); // 希望获取到鼠标移动时，光标靠近的位置。
     this->setWindowFlags(Qt::Window|Qt::FramelessWindowHint|Qt::WindowSystemMenuHint|Qt::WindowMinimizeButtonHint|Qt::WindowMaximizeButtonHint);
 
@@ -311,14 +311,12 @@ MusicShow::MusicShow(QWidget *parent) :
     connect(m_speedControl,SIGNAL(sigSlowDown()),this,SLOT(onSlowDown()));
     connect(m_speedControl,SIGNAL(sigRecover()),this,SLOT(onRecover()));
     connect(m_speedControl,SIGNAL(sigQuickUp()),this,SLOT(onQuickUp()));
-    //窗口模式切换
+    // 窗口模式切换
     connect(m_title,SIGNAL(doubleClicked()),this,SLOT(showFullScreen()));
     connect(m_title,SIGNAL(normalShow()),this,SLOT(showNormal()));
 
-    // 定时器控制提示信息时长
-    //    m_timer->setInterval(5000);
+    // 文本淡出
     connect(m_timer,SIGNAL(timeout()),this,SLOT(onOpacity()));
-    connect(this,SIGNAL(signalOpacityStop()),this, SLOT(onTimeOut()));
     m_timer->start(30);
 }
 
@@ -590,13 +588,8 @@ void MusicShow::synchronyLrc(const QString &fileName)
     QFileInfo info(fileName);
     QString songName = info.fileName();
     int size = songName.length()-4;
-    if (12<size){
-        size = 12;
-        songName = songName.left(size)+"...";
-    }else{
-        songName = songName.left(size);
-    }
-    setHint(songName,false);
+    if (11<size)size = 11;
+    setHint(songName.left(size),false);
 
     // 展示歌词
     if (!m_isLrc){
@@ -605,16 +598,18 @@ void MusicShow::synchronyLrc(const QString &fileName)
     if(m_isShowLrc) m_songLrc->show();
 }
 
-void MusicShow::setHint(QString hint, bool isRightIn)
+void MusicShow::setHint(QString hint, bool isRightIn, int showtime)
 {
     m_timer->stop();
-    m_hintInfo->clear();
+    m_effect->setOpacity(1);
+    m_effect->update();
     m_hintInfo->setText(hint.split("", QString::SkipEmptyParts).join("\n"));
     m_hintInfo->show();
+    qDebug()<<"设置提示:"<<hint;
     if(isRightIn){
         isLighterIn = isRightIn;
         m_opaclevel = 0;
-        m_timer->start(100);
+        m_timer->start(showtime);
     }
 }
 // 选择列表当中的曲目
@@ -940,14 +935,18 @@ void MusicShow::on_loading_dir()
     isDir = true;
     //  m_networdShow->stop();
     //  m_networdShow->setHidden(true);
-    this->setHint(tr("加载中"),false);
-    
-    QString fileName = QFileDialog::getExistingDirectory(this,"Music",m_songsDir,QFileDialog::ReadOnly);
-    if (fileName.isNull() || fileName.isEmpty() ||getAllFiles(fileName).isEmpty()){
-        this->setHint(tr("没有内容"));
-        return;
+    setHint(tr("加载中"),false);
+
+
+    QString dir = QFileDialog::getExistingDirectory(Q_NULLPTR, QString("请选择歌曲目录"), m_songsDir,QFileDialog::DontUseNativeDialog|QFileDialog::ReadOnly|QFileDialog::ShowDirsOnly);
+    qDebug()<<dir;
+    if(dir.isEmpty()||getAllFiles(dir).isEmpty() )
+        setHint(tr("没有内容可加载"));
+    else{
+        setHint(tr("完成加载"));
+        qDebug()<<"成功";
     }
-    this->setHint(tr("完成加载"));
+
 }
 
 
@@ -1491,7 +1490,6 @@ void MusicShow::onOpacity()
     {
         m_opaclevel += 0.02;
         m_effect->setOpacity(m_opaclevel);
-        m_hintInfo -> setGraphicsEffect(m_effect);
         if(m_opaclevel > 1){
             QEventLoop eventloop;
             QTimer::singleShot(3000, &eventloop, SLOT(quit()));	//持续3秒
@@ -1503,10 +1501,9 @@ void MusicShow::onOpacity()
     {
         m_opaclevel -= 0.02;
         m_effect->setOpacity(m_opaclevel);
-        m_hintInfo -> setGraphicsEffect(m_effect);
         if(m_opaclevel < 0){
             m_hintInfo -> hide();
-            emit signalOpacityStop();
+            m_timer->stop();
         }
     }
 }
