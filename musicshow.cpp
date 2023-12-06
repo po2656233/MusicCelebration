@@ -1002,7 +1002,7 @@ void MusicShow::on_loading_web()
         inputWeb->setEnabled(true);
         inputWeb->setFocus();
         if(singName.isEmpty()){
-            this->setHint(tr("加载失败"));
+            this->setHint(tr("非mp3网址"));
             //            emit inputWeb->over();
             return;
         }else{
