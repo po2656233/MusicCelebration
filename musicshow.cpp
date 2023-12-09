@@ -702,13 +702,12 @@ bool MusicShow::adjustShow()
     }
     bool isM3u8 = songName.contains(".m3u8");
     m_horizontalSlider->setEnabled(!isM3u8);
-    m_speedControl->setEnabled(!isM3u8);
 
     listTurnVedio( !checkSong(songName));
     if(m_isShowLrc && isM3u8){
         m_songLrc->hide();
     }
-    return true;
+    return isM3u8;
 }
 // 选择列表当中的曲目
 void MusicShow::onSelectitem(const QModelIndex &index)
@@ -725,7 +724,6 @@ void MusicShow::onSelectitem(const QModelIndex &index)
         {
             bool isM3u8 = songName.contains(".m3u8");
             m_horizontalSlider->setEnabled(!isM3u8);
-            m_speedControl->setEnabled(!isM3u8);
             m_player->stop();
             m_playing = songUrl;
             m_fileList->setCurrentIndex(i);
@@ -1359,7 +1357,7 @@ void MusicShow::onSeek(int seek)
 
 void MusicShow::onSlowDown()
 {
-    if(m_isNext){
+    if(m_isNext || !m_horizontalSlider->isEnabled()){
         m_fileList->previous();
         adjustShow();
         return;
@@ -1376,6 +1374,7 @@ void MusicShow::onSlowDown()
 
 void MusicShow::onRecover()
 {
+    if(!m_horizontalSlider->isEnabled())return;
     if(!m_isNext){
         g_rate = 1.0;
         emit m_player->playbackRateChanged(g_rate);
@@ -1388,7 +1387,7 @@ void MusicShow::onRecover()
 
 void MusicShow::onQuickUp()
 {
-    if(m_isNext){
+    if(m_isNext|| !m_horizontalSlider->isEnabled()){
         m_fileList->next();
         adjustShow();
         return;
@@ -1421,7 +1420,6 @@ void MusicShow::onSingTheSong(int index)
         {
             bool isM3u8 = songName.contains(".m3u8");
             m_horizontalSlider->setEnabled(!isM3u8);
-            m_speedControl->setEnabled(!isM3u8);
 
             m_listView->setCurrentIndex(m_model->index(i));
             m_player->stop();
@@ -1629,17 +1627,14 @@ void MusicShow::onClear()
 // 播放
 void MusicShow::onPlay()
 {
-    if(m_speedControl->isEnabled()){
-        if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
-            m_player->play();
-        else
-            m_fileList->next();
-    }else{
+    if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
+        m_player->play();
+    else
         m_fileList->next();
+    if (adjustShow() && m_fileList->previousIndex()+1 == m_fileList->currentIndex()){
         m_fileList->previous();
+        m_fileList->next();
     }
-
-    adjustShow();
 }
 
 void MusicShow::onStop()
