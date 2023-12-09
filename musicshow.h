@@ -86,6 +86,10 @@ public:
     // 设置提示信息
     void setHint(QString fileName, bool isRightIn = true,int showtime = 30);
 
+private:
+    //   (需检测是否是视频)
+    void adjustShow();
+
 protected:
     // 键盘事件——控制状态
     //void keyPressEvent(QKeyEvent *event);
@@ -110,7 +114,6 @@ private slots:
     // 网络加载
     void on_loading_web();
 
-
     // 有无边框切换
     void on_noBoardStyle();
     void on_topWindow();
@@ -121,11 +124,18 @@ private slots:
 
     // 静音
     void onMuted(bool);
+    // 播放
+    void onPlay();
+    // 停止播放
+    void onStop();
 
     // 歌曲步进
     void onSeek(int seek);
+    // 降速 或 上一首
     void onSlowDown();
+    // 恢复步进 或 切换播放上下首
     void onRecover();
+    // 快进 或 下一首
     void onQuickUp();
 
     // 持续时间
@@ -150,17 +160,13 @@ private slots:
     void onSigletonShow();
     // 显示歌词
     void onSongShow();
-    // 播放(需检测是否是视频)
-    void onPlay();
-    // 停止播放(需检测是否是视频)
-    void onStop();
-
-
-
     // 文本淡出
     void onOpacity();
+
     // 关闭定时器
     void onTimeOut();
+    // 清空列表
+    void onClear();
 
     void on_err(QMediaPlayer::Error error);
 
@@ -214,6 +220,7 @@ private:
     QAction*                m_actHide;    // 隐藏
     QAction*                m_actMute;    // 静音
     QAction*                m_actLry;     // 显示歌词
+    QAction*                m_actClear;   // 清空
     QAction*                m_actSigleton;// 单窗体
     WebView*                m_networdShow;// 网页
     QGraphicsOpacityEffect* m_effect;     // 提示效果控制
