@@ -88,7 +88,7 @@ public:
 
 private:
     //   (需检测是否是视频)
-    void adjustShow();
+    bool adjustShow();
 
 protected:
     // 键盘事件——控制状态

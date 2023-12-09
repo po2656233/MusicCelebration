@@ -691,11 +691,11 @@ void MusicShow::setHint(QString hint, bool isRightIn, int showtime)
     }
 }
 
-void MusicShow::adjustShow()
+bool MusicShow::adjustShow()
 {
     QString songName = m_fileList->currentMedia().canonicalUrl().toString();
     if(songName.isEmpty()){
-        return;
+        return false;
     }
     if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty()){
         songName = m_mapAnotherName[songName];
@@ -708,6 +708,7 @@ void MusicShow::adjustShow()
     if(m_isShowLrc && isM3u8){
         m_songLrc->hide();
     }
+    return true;
 }
 // 选择列表当中的曲目
 void MusicShow::onSelectitem(const QModelIndex &index)
@@ -1630,11 +1631,13 @@ void MusicShow::onClear()
 // 播放
 void MusicShow::onPlay()
 {
+    if (!m_horizontalSlider->isEnabled()){
+        m_player->stop();
+    }
     if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
         m_player->play();
     else
         m_fileList->next();
-    qDebug()<<"onPlay";
     adjustShow();
 }
 
