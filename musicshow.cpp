@@ -1359,7 +1359,6 @@ void MusicShow::onSeek(int seek)
 
 void MusicShow::onSlowDown()
 {
-    qDebug()<<"onSlowDown";
     if(m_isNext){
         m_fileList->previous();
         adjustShow();
@@ -1389,7 +1388,6 @@ void MusicShow::onRecover()
 
 void MusicShow::onQuickUp()
 {
-    qDebug()<<"onQuickUp";
     if(m_isNext){
         m_fileList->next();
         adjustShow();
@@ -1419,7 +1417,7 @@ void MusicShow::onSingTheSong(int index)
             songName = m_mapAnotherName[songName];
         }
 
-        if (m_playing.fileName() == songName)
+        if (m_playing.toString() == songName)
         {
             bool isM3u8 = songName.contains(".m3u8");
             m_horizontalSlider->setEnabled(!isM3u8);
@@ -1631,23 +1629,26 @@ void MusicShow::onClear()
 // 播放
 void MusicShow::onPlay()
 {
-    if (!m_horizontalSlider->isEnabled()){
-        m_player->stop();
-    }
-    if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
-        m_player->play();
-    else
+    if(m_speedControl->isEnabled()){
+        if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
+            m_player->play();
+        else
+            m_fileList->next();
+    }else{
         m_fileList->next();
+        m_fileList->previous();
+    }
+
     adjustShow();
 }
 
 void MusicShow::onStop()
 {
-    m_player->stop();
     if(!m_fileList->currentMedia().canonicalUrl().toString().isEmpty()){
         m_songLrc->clear();
         setHint("播放停止");
     }
+    m_player->stop();
 }
 
 void MusicShow::onOpacity()
