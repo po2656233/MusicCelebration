@@ -697,6 +697,19 @@ bool MusicShow::adjustShow()
     if(songName.isEmpty()){
         return false;
     }
+    QString fileName = m_fileList->currentMedia().canonicalUrl().fileName();
+    if(!fileName.isEmpty()){
+        for (int i = 0; i < m_model->rowCount(); i++)
+        {
+            if (fileName == m_model->index(i).data().toString())
+            {
+                m_listView->setCurrentIndex(m_model->index(i));
+                m_listView->setSelectionRectVisible(true);
+                break;
+            }
+        }
+    }
+
     if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty()){
         songName = m_mapAnotherName[songName];
     }
@@ -1405,6 +1418,7 @@ void MusicShow::onQuickUp()
 //指定播放的歌曲
 void MusicShow::onSingTheSong(int index)
 {
+
     m_fileList->setCurrentIndex(index);
     m_playing = m_fileList->currentMedia().canonicalUrl();
     if (!m_playing.isValid() || m_playing.isEmpty()) return;
@@ -1427,6 +1441,9 @@ void MusicShow::onSingTheSong(int index)
             m_songLrc->clear();
             m_hintInfo->hide();
             listTurnVedio( !checkSong(m_playing.toString()) );
+            if(m_isShowLrc && isM3u8){
+                m_songLrc->hide();
+            }
             break;
         }
     }
@@ -1627,14 +1644,18 @@ void MusicShow::onClear()
 // 播放
 void MusicShow::onPlay()
 {
+    if (adjustShow()&& m_fileList->previousIndex()+1 == m_fileList->currentIndex()){
+        m_fileList->previous();
+        m_fileList->next();
+        m_songLrc->hide();
+        return;
+    }
     if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
         m_player->play();
     else
         m_fileList->next();
-    if (adjustShow() && m_fileList->previousIndex()+1 == m_fileList->currentIndex()){
-        m_fileList->previous();
-        m_fileList->next();
-    }
+
+
 }
 
 void MusicShow::onStop()
@@ -1680,6 +1701,11 @@ void MusicShow::on_err(QMediaPlayer::Error error)
 {
     Q_UNUSED(error)
     qDebug()<<"ERROR99";
+    if(m_player)
+      {
+        m_fileList->next();
+        adjustShow();
+    }
     /*
     if(m_player)
       {
