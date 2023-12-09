@@ -7,7 +7,7 @@
 /// @version  1.0
 /// @note     实现音乐的整体界面展示：
 /// 涵盖：
-/// 1\曲目录入
+/// 1\曲目录入 注:过滤重名
 /// 2\曲目播放
 /// 3\时间显示
 /// 4\歌词显示
@@ -70,6 +70,12 @@ public:
     explicit MusicShow(QWidget *parent = 0);
     ~MusicShow();
 
+    // 添加歌曲
+    void addSong(QString songAddr);
+    void addSongList(QStringList songAddrs);
+    // 网络加载
+    bool addWeb(QString webAddr);
+
     // 正播放的曲目
     QUrl playing();
     // 所有曲目
@@ -104,19 +110,24 @@ private slots:
     // 网络加载
     void on_loading_web();
 
+
     // 有无边框切换
     void on_noBoardStyle();
     void on_topWindow();
+
     // 选择歌曲
     void onSelectitem(const QModelIndex &index);
     void onSelectitem_singal(const QModelIndex &index);
+
     // 静音
     void onMuted(bool);
+
     // 歌曲步进
     void onSeek(int seek);
     void onSlowDown();
     void onRecover();
     void onQuickUp();
+
     // 持续时间
     void onDuration(qint64 duration);
     // 播放时间
@@ -141,6 +152,8 @@ private slots:
     void onSongShow();
     // 播放(需检测是否是视频)
     void onPlay();
+    // 停止播放(需检测是否是视频)
+    void onStop();
 
 
 
@@ -220,7 +233,8 @@ private:
     QUrl                    m_playing; // 当前播放的文件
     QPoint                  m_dragPosition; //窗口移动拖动时需要记住的点
     QString                 m_songsDir;
-    QFileInfoList           m_songList;// 文件列表
+    QMap<QString,QString>   m_mapAnotherName;   // 网址别名 加载成功时生效,不要与列表名重复,否则被过滤掉。 如百度|http://www.baidu.com
+    QFileInfoList           m_songList;         // 文件列表
     //QMap<qint64, QString>   lrc_map;
     //QTimer*                 m_timer;  // 歌词定时器
 };
