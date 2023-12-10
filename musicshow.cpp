@@ -135,15 +135,16 @@ MusicShow::MusicShow(QWidget *parent) :
     m_effect = new QGraphicsOpacityEffect(this);//效果控制
     m_hintInfo -> setGraphicsEffect(m_effect);
     this->setMouseTracking(true); // 希望获取到鼠标移动时，光标靠近的位置。
+    //    this->grabKeyboard();[弃用]
     this->setWindowFlags(Qt::Window|Qt::FramelessWindowHint|Qt::WindowSystemMenuHint|Qt::WindowMinimizeButtonHint|Qt::WindowMaximizeButtonHint);
 
     m_title->setFixedHeight(85);
     m_playInfo->setFixedHeight(85);
-    //    m_lound->setMinimumHeight(120);
-    //    m_listView->setMinimumWidth(m_play->minimumWidth()+m_paused->minimumWidth()+m_stop->minimumWidth());
 
     // 布局
     this->setLayout(m_layout);
+    this->resize(800,500);
+
     //    m_layout->setAlignment(Qt::AlignAbsolute);
     //m_layout->addWidget(m_songLrc,1,0,1,1);//歌词
 
@@ -165,7 +166,7 @@ MusicShow::MusicShow(QWidget *parent) :
     m_layout->addWidget(m_playMode,5,5,1,1);
     m_layout->addWidget(m_timeUp,6,5,1,1);
 
-    this->resize(800,500);
+
     // 设置水平间距 设置垂直间距 设置外间距
     //    m_layout->setHorizontalSpacing(10);
     //    m_layout->setVerticalSpacing(10);
@@ -193,10 +194,10 @@ MusicShow::MusicShow(QWidget *parent) :
     m_actQuit->setText(tr("闭月羞花"));
     
     // 快捷键
-    m_play->setShortcut(QKeySequence(Qt::Key_P));
-    m_paused->setShortcut(QKeySequence(Qt::Key_Space));
-    m_stop->setShortcut(QKeySequence(Qt::Key_Backspace));
-    m_loading->setShortcut(QKeySequence(Qt::Key_S));
+    m_play->setShortcut(QKeySequence(Qt::Key_Space));
+    m_paused->setShortcut(QKeySequence(Qt::Key_P));
+    m_stop->setShortcut(QKeySequence(Qt::Key_S));
+    m_loading->setShortcut(QKeySequence(Qt::Key_O));
     m_actQuit->setShortcut(QKeySequence(Qt::Key_F4));
     m_playMode->setShortcut(QKeySequence(Qt::Key_M));
     
@@ -239,7 +240,6 @@ MusicShow::MusicShow(QWidget *parent) :
     m_listView->setWordWrap(true);
     m_listView->setModel(m_model);
     m_listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    
 
     //    // 导入python进行爬虫
     //    Py_Initialize();
@@ -279,7 +279,7 @@ MusicShow::MusicShow(QWidget *parent) :
     //点击播放
     connect(m_play,SIGNAL(clicked(bool)),this, SLOT(onPlay()));
     //点击暂停
-    connect(m_paused,SIGNAL(clicked(bool)),m_player,SLOT(pause()));
+    connect(m_paused,SIGNAL(clicked(bool)),this,SLOT(onPause()));
     //点击停止
     connect(m_stop,SIGNAL(clicked(bool)),this,SLOT(onStop()));
     
@@ -722,6 +722,7 @@ bool MusicShow::adjustShow()
     }
     return isM3u8;
 }
+
 // 选择列表当中的曲目
 void MusicShow::onSelectitem(const QModelIndex &index)
 {
@@ -737,15 +738,21 @@ void MusicShow::onSelectitem(const QModelIndex &index)
         {
             bool isM3u8 = songName.contains(".m3u8");
             m_horizontalSlider->setEnabled(!isM3u8);
-            m_player->stop();
             m_playing = songUrl;
             m_fileList->setCurrentIndex(i);
+            m_hintInfo->hide();
+            m_player->stop();
             m_songLrc->stopLrcMask();
             m_songLrc->clear();
-            m_hintInfo->hide();
             listTurnVedio( !checkSong(songName) );
             if(m_isShowLrc && isM3u8){
                 m_songLrc->hide();
+            }
+            if (isM3u8 && QMediaPlayer::StoppedState == m_player->state() && m_fileList->previousIndex()+1 == m_fileList->currentIndex() ){
+                m_fileList->previous();
+                m_fileList->next();
+                m_songLrc->hide();
+                return;
             }
             break;
         }
@@ -793,51 +800,8 @@ void MusicShow::onStatus(QMediaPlayer::State status)
     
     
 }
-/*
-// 键盘事件（调整播放状态）
-void MusicShow::keyPressEvent(QKeyEvent *event)
-{
-  switch (event->key()) {
-    case Qt::Key_Enter:
-      {
-        if(isPlay)
-          {
-            isPlay = false;
-            emit m_player->stateChanged(QMediaPlayer::PausedState);
-          }
-        else
-          {
-            isPlay = true;
-            emit m_player->stateChanged(QMediaPlayer::PlayingState);
-          }
-        break;
-      }
-    case Qt::Key_Space:
-      {
-        if(isPlay)
-          {
-            isPlay = false;
-            emit m_player->stateChanged(QMediaPlayer::PausedState);
-          }
-        else
-          {
-            isPlay = true;
-            emit m_player->stateChanged(QMediaPlayer::PlayingState);
-          }
-        break;
-      }
-    case Qt::Key_Escape:
-      {
-        this->showNormal();
-        break;
-      }
-    default:
-      break;
-    }
-  event->ignore();
-  QWidget::keyPressEvent(event);
-}
-*/
+
+
 // 双击全屏
 void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
 {
@@ -1002,7 +966,7 @@ void MusicShow::wheelEvent(QWheelEvent *event)
 void MusicShow::onLoading()
 {
     DialogMx *loadDlg = new DialogMx(this);
-    loadDlg->setGeometry(this->pos().x()+10,this->pos().y()+this->height()-170,m_loading->width(),100);
+    loadDlg->setGeometry(this->pos().x()+m_loading->x(),this->pos().y()+m_loading->y()-75-m_loading->height(),m_loading->width(),100);
     if(m_isTop)
         loadDlg->setWindowFlags(Qt::WindowStaysOnTopHint|Qt::Dialog|Qt::FramelessWindowHint);
     else
@@ -1447,7 +1411,6 @@ void MusicShow::onSingTheSong(int index)
             break;
         }
     }
-    
     if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
         m_player->play();
 
@@ -1644,12 +1607,16 @@ void MusicShow::onClear()
 // 播放
 void MusicShow::onPlay()
 {
-    if (adjustShow()&& m_fileList->previousIndex()+1 == m_fileList->currentIndex()){
-        m_fileList->previous();
-        m_fileList->next();
-        m_songLrc->hide();
-        return;
+    if (adjustShow()){
+        if(QMediaPlayer::PlayingState == m_player->state())return;
+        if (QMediaPlayer::StoppedState == m_player->state() && m_fileList->previousIndex()+1 == m_fileList->currentIndex() ){
+            m_fileList->previous();
+            m_fileList->next();
+            m_songLrc->hide();
+            return;
+        }
     }
+
     if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
         m_player->play();
     else
@@ -1658,6 +1625,13 @@ void MusicShow::onPlay()
 
 }
 
+// 暂停播放
+void MusicShow::onPause()
+{
+    m_player->pause();
+}
+
+// 停止播放
 void MusicShow::onStop()
 {
     if(!m_fileList->currentMedia().canonicalUrl().toString().isEmpty()){
@@ -1702,7 +1676,7 @@ void MusicShow::on_err(QMediaPlayer::Error error)
     Q_UNUSED(error)
     qDebug()<<"ERROR99";
     if(m_player)
-      {
+    {
         m_fileList->next();
         adjustShow();
     }
@@ -1714,7 +1688,7 @@ void MusicShow::on_err(QMediaPlayer::Error error)
       }
     m_player = new QMediaPlayer;
     m_player->setVideoOutput(m_view);*/
-    
+
 }
 
 
@@ -1765,5 +1739,5 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
     default:
         break;
     }
-    
+
 }

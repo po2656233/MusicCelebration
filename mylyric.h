@@ -41,8 +41,11 @@ protected:
   void contextMenuEvent(QContextMenuEvent * event);
 private slots:
   void timeout();
+
 private:
   void clearInfo();
+
+private:
   QTimer*   m_timer;
   qreal     m_lrcMaskWidth;
   qreal     m_lrcMaskWidthInterval;
