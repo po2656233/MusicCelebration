@@ -215,7 +215,7 @@ MusicShow::MusicShow(QWidget *parent) :
 
     // 设置字体颜色
     QPalette pa;
-    pa.setColor(QPalette::WindowText,Qt::black);
+    pa.setColor(QPalette::WindowText,Qt::red);
     m_hintInfo->setPalette(pa);
     m_hintInfo->setFont(QFont("FZShuTi", 18));
     pa.setColor(QPalette::WindowText,Qt::blue);
