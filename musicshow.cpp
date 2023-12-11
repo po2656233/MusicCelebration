@@ -215,7 +215,7 @@ MusicShow::MusicShow(QWidget *parent) :
 
     // 设置字体颜色
     QPalette pa;
-    pa.setColor(QPalette::WindowText,Qt::red);
+    pa.setColor(QPalette::WindowText,Qt::black);
     m_hintInfo->setPalette(pa);
     m_hintInfo->setFont(QFont("FZShuTi", 18));
     pa.setColor(QPalette::WindowText,Qt::blue);
@@ -1066,7 +1066,7 @@ void MusicShow::on_loading_web()
     // 当前如果是视频,则停止
     QString mediaName = m_fileList->currentMedia().canonicalUrl().toString();
     if(!checkSong(mediaName)){
-         onStop();
+        onStop();
     }
 
     // 开始按钮置灰
@@ -1662,12 +1662,14 @@ void MusicShow::onPause()
 // 停止播放
 void MusicShow::onStop()
 {
+    m_player->stop();
+
     if(!m_fileList->currentMedia().canonicalUrl().toString().isEmpty()){
         m_songLrc->clear();
         setHint("播放停止");
     }
-    m_player->stop();
-    adjustShow();
+
+    listTurnVedio( false);
 }
 
 void MusicShow::onOpacity()
@@ -1719,6 +1721,11 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
     case QMediaPlayer::UnknownMediaStatus:
         qDebug()<<200;
         break;
+    case QMediaPlayer::NoMedia:
+    {
+        qDebug()<<400;
+        // 往下执行
+    }
     case QMediaPlayer::InvalidMedia:
     {
         qDebug()<<300;
@@ -1730,14 +1737,11 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         }
         break;
     }
-    case QMediaPlayer::NoMedia:{
-        qDebug()<<400;
-        break;
-    }
+
     case QMediaPlayer::LoadingMedia:
         sigletonShow(false);//正常窗体
-        qDebug()<<500<<m_listView->currentIndex();
-        //        adjustShow();
+        qDebug()<<500;
+        //adjustShow();
         break;
     case QMediaPlayer::LoadedMedia:
         qDebug()<<600;

@@ -126,12 +126,12 @@ private slots:
     void onSelectitem(const QModelIndex &index);
     void onSelectitem_singal(const QModelIndex &index);
 
-    // 静音
-    void onMuted(bool);
+
     // 播放
     void onPlay();
+    // 暂停
     void onPause();
-    // 停止播放
+    // 停止
     void onStop();
 
     // 歌曲步进
@@ -149,7 +149,8 @@ private slots:
     void onPlayTimer(qint64 value);
     // 音量调节
     void on_lound_sliderMoved(int position);
-
+    // 静音
+    void onMuted(bool);
 
     // 状态变化
     void onStatus(QMediaPlayer::State status);
