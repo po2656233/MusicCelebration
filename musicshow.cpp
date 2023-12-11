@@ -816,7 +816,7 @@ void MusicShow::onStatus(QMediaPlayer::State status)
     {
         m_isPlayer = false;
         sliderStyle(false);
-        listTurnVedio(false);
+//        listTurnVedio(false);
     }
         break;
     default:
@@ -1707,7 +1707,7 @@ void MusicShow::on_err(QMediaPlayer::Error error)
     //    Q_UNUSED(error)
     qDebug()<<"ERROR99"<<error;
     QString rowdata = m_model->data(m_listView->currentIndex()).toString();
-    setHint(rowdata +" 无效播放源");
+    setHint(rowdata +" 无效播放源",false);
 }
 
 
@@ -1721,11 +1721,6 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
     case QMediaPlayer::UnknownMediaStatus:
         qDebug()<<200;
         break;
-    case QMediaPlayer::NoMedia:
-    {
-        qDebug()<<400;
-        // 往下执行
-    }
     case QMediaPlayer::InvalidMedia:
     {
         qDebug()<<300;
@@ -1737,7 +1732,11 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         }
         break;
     }
-
+    case QMediaPlayer::NoMedia:
+    {
+        qDebug()<<400;
+        break;
+    }
     case QMediaPlayer::LoadingMedia:
         sigletonShow(false);//正常窗体
         qDebug()<<500;
