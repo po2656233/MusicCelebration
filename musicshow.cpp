@@ -75,14 +75,20 @@ static bool isLeftPressDown = false;//鼠标左键按下
 static bool isSigleton = false;
 bool isLoadNow = false; //是否正在加载中
 bool isLighterIn = true;// 是否淡入显示(仅对提示信息)
+// 歌曲
 QStringList audioList = QStringList()<<"*.mp3"<<"*.wma"<<"*.wav"\
                                     <<"*.ape"<<"*.aac"\
                                    <<"*.asf"<<"*.flac";
-
+// 视频
 QStringList videoList = QStringList()<<"*.mp4"<<"*.mov"<<"*.mkv"\
                                     <<"*.mpeg"<<"*.mpeg1"<<"*.mpeg2"<<"*.mpeg4"\
                                    <<"*.rm"<<"*.rmvb"\
                                   <<"*.avi"<<"*.m3u8";
+
+// 直播源
+QStringList liveList = QStringList()<<"*.m3u8"<<"*.m3u";
+
+
 #define PADDING 2 //边距
 
 MusicShow::MusicShow(QWidget *parent) :
@@ -504,9 +510,9 @@ bool MusicShow::addWeb(QString webAddr)
     }
 
     // 检测是否是直播源 仅支持 .m3u8格式
-    if(webAddr.contains(".m3u8")){
+    if(isLive(webAddr)){
         // 播放直播源
-        m_fileList->addMedia( QUrl(webAddr));
+        m_fileList->addMedia(QUrl(webAddr));
         anotherName.isEmpty()?addSong(webAddr):addSong(anotherName);
         this->setHint(tr("直播源 加载成功!"));
         return true;
@@ -585,13 +591,35 @@ void MusicShow::sigletonShow(bool isShow)
 
 bool MusicShow::checkSong(const QString &songName)
 {
-    
     if(songName.isNull()||songName.isEmpty())return false;
-    synchronyLrc(songName);
 
     foreach (QString audio, audioList) {
-        QString tmp = audio.replace("*","");
-        if(songName.contains(audio)){
+        if(songName.contains(audio.replace("*",""))){
+            synchronyLrc(songName);
+            return true;
+        }
+    }
+    if(isVideo(songName) || isLive(songName))return false;
+    // 非曲类 也展示词
+    synchronyLrc(songName);
+    return false;
+}
+// 是否是直播源
+bool MusicShow::isLive(const QString &songName)
+{
+    foreach (QString video, videoList) {
+        if(songName.contains(video.replace("*",""))){
+            return true;
+        }
+    }
+    return false;
+}
+
+// 是否是视频
+bool MusicShow::isVideo(const QString &songName)
+{
+    foreach (QString video, videoList) {
+        if(songName.contains(video.replace("*",""))){
             return true;
         }
     }
@@ -608,7 +636,7 @@ QStringList MusicShow::getAllFiles(const QString &strDir)
     dir.setFilter(QDir::Dirs|QDir::Files);
     dir.setSorting(QDir::DirsFirst|QDir::Time|QDir::Reversed);
     QStringList fileList;
-    fileList<<audioList<<videoList;
+    fileList<<audioList<<videoList<<liveList;
     dir.setNameFilters(fileList);
 
 
@@ -713,14 +741,14 @@ bool MusicShow::adjustShow()
     if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty()){
         songName = m_mapAnotherName[songName];
     }
-    bool isM3u8 = songName.contains(".m3u8");
-    m_horizontalSlider->setEnabled(!isM3u8);
+    bool isLiving = isLive(songName);
+    m_horizontalSlider->setEnabled(!isLiving);
 
     listTurnVedio( !checkSong(songName));
-    if(m_isShowLrc && isM3u8){
+    if(m_isShowLrc && isLiving){
         m_songLrc->hide();
     }
-    return isM3u8;
+    return isLiving;
 }
 
 // 选择列表当中的曲目
@@ -736,8 +764,8 @@ void MusicShow::onSelectitem(const QModelIndex &index)
         }
         if (songUrl.fileName() == songName || songUrl.toString() == songName)
         {
-            bool isM3u8 = songName.contains(".m3u8");
-            m_horizontalSlider->setEnabled(!isM3u8);
+            bool isLiving = isLive(songName);
+            m_horizontalSlider->setEnabled(!isLiving);
             m_playing = songUrl;
             m_fileList->setCurrentIndex(i);
             m_hintInfo->hide();
@@ -745,10 +773,7 @@ void MusicShow::onSelectitem(const QModelIndex &index)
             m_songLrc->stopLrcMask();
             m_songLrc->clear();
             listTurnVedio( !checkSong(songName) );
-            if(m_isShowLrc && isM3u8){
-                m_songLrc->hide();
-            }
-            if (isM3u8 && QMediaPlayer::StoppedState == m_player->state() && m_fileList->previousIndex()+1 == m_fileList->currentIndex() ){
+            if (isLiving && QMediaPlayer::StoppedState == m_player->state() && m_fileList->previousIndex()+1 == m_fileList->currentIndex() ){
                 m_fileList->previous();
                 m_fileList->next();
                 m_songLrc->hide();
@@ -1040,11 +1065,8 @@ void MusicShow::on_loading_web()
 {
     // 当前如果是视频,则停止
     QString mediaName = m_fileList->currentMedia().canonicalUrl().toString();
-    foreach (QString video, videoList) {
-        if(mediaName.contains(video.replace("*",""))){
-            m_player->stop();
-            break;
-        }
+    if(!checkSong(mediaName)){
+         onStop();
     }
 
     // 开始按钮置灰
@@ -1100,6 +1122,18 @@ void MusicShow::on_loading_web()
     connect(inputWeb,&LineEditMx::over,this,[=](){
         m_loading->setPalette(pa);
         m_loading->setEnabled(true);
+
+        // 同步 媒体和model的排序
+        QString songName = "";
+        for (int i = 0; i < m_model->rowCount(); i++)
+        {
+            songName = m_model->index(i).data().toString();
+            if(!m_mapAnotherName[songName].isEmpty()){
+                songName = m_mapAnotherName[songName];
+            }
+            m_fileList->insertMedia(i,QUrl(songName));
+        }
+
         if (inputWeb)inputWeb->deleteLater();
     });
 }
@@ -1382,39 +1416,33 @@ void MusicShow::onQuickUp()
 //指定播放的歌曲
 void MusicShow::onSingTheSong(int index)
 {
-
+    qDebug()<<" 当前索引: "<<index;
     m_fileList->setCurrentIndex(index);
     m_playing = m_fileList->currentMedia().canonicalUrl();
     if (!m_playing.isValid() || m_playing.isEmpty()) return;
+    m_listView->setCurrentIndex(m_model->index(index));
+    //    for (int i = 0; i < m_model->rowCount(); i++)
+    //    {
+    //        QString songName = m_model->index(i).data().toString();
+    //        if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty()){
+    //            songName = m_mapAnotherName[songName];
+    //        }
 
-    for (int i = 0; i < m_model->rowCount(); i++)
-    {
-        QString songName = m_model->index(i).data().toString();
-        if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty()){
-            songName = m_mapAnotherName[songName];
-        }
-
-        if (m_playing.toString() == songName)
-        {
-            bool isM3u8 = songName.contains(".m3u8");
-            m_horizontalSlider->setEnabled(!isM3u8);
-
-            m_listView->setCurrentIndex(m_model->index(i));
-            m_player->stop();
-            m_songLrc->stopLrcMask();
-            m_songLrc->clear();
-            m_hintInfo->hide();
-            listTurnVedio( !checkSong(m_playing.toString()) );
-            if(m_isShowLrc && isM3u8){
-                m_songLrc->hide();
-            }
-            break;
-        }
-    }
+    //        if (m_playing.toString() == songName)
+    //        {
+    //            m_horizontalSlider->setEnabled(!isLive(songName));
+    //            m_listView->setCurrentIndex(m_model->index(i));
+    //            m_player->stop();
+    //            m_songLrc->stopLrcMask();
+    //            m_songLrc->clear();
+    //            m_hintInfo->hide();
+    //            listTurnVedio( !checkSong(m_playing.toString()) );
+    //            break;
+    //        }
+    //    }
     if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
         m_player->play();
-
-
+    adjustShow();
 }
 
 
@@ -1639,6 +1667,7 @@ void MusicShow::onStop()
         setHint("播放停止");
     }
     m_player->stop();
+    adjustShow();
 }
 
 void MusicShow::onOpacity()
@@ -1673,22 +1702,10 @@ void MusicShow::onTimeOut()
 
 void MusicShow::on_err(QMediaPlayer::Error error)
 {
-    Q_UNUSED(error)
-    qDebug()<<"ERROR99";
-    if(m_player)
-    {
-        m_fileList->next();
-        adjustShow();
-    }
-    /*
-    if(m_player)
-      {
-        delete m_player;
-        m_player = nullptr;
-      }
-    m_player = new QMediaPlayer;
-    m_player->setVideoOutput(m_view);*/
-
+    //    Q_UNUSED(error)
+    qDebug()<<"ERROR99"<<error;
+    QString rowdata = m_model->data(m_listView->currentIndex()).toString();
+    setHint(rowdata +" 无效播放源");
 }
 
 
@@ -1719,8 +1736,8 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
     }
     case QMediaPlayer::LoadingMedia:
         sigletonShow(false);//正常窗体
-        adjustShow();
-        qDebug()<<500;
+        qDebug()<<500<<m_listView->currentIndex();
+        //        adjustShow();
         break;
     case QMediaPlayer::LoadedMedia:
         qDebug()<<600;
@@ -1737,6 +1754,7 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         QThread::usleep(100);
         break;
     default:
+        qDebug()<<000000<<status;
         break;
     }
 

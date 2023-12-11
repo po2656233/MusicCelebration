@@ -121,6 +121,8 @@ private slots:
     void on_topWindow();
 
     // 选择歌曲
+    // 播放指定歌曲
+    void onSingTheSong(int index);
     void onSelectitem(const QModelIndex &index);
     void onSelectitem_singal(const QModelIndex &index);
 
@@ -148,8 +150,7 @@ private slots:
     // 音量调节
     void on_lound_sliderMoved(int position);
 
-    // 播放指定歌曲
-    void onSingTheSong(int index);
+
     // 状态变化
     void onStatus(QMediaPlayer::State status);
     // 媒体状态
@@ -159,6 +160,7 @@ private slots:
     void on_playModel_clicked();
     // 托盘模式
     void OnTrayActivated(QSystemTrayIcon::ActivationReason reason);
+
     // 单口播放
     void onSigletonShow();
     // 显示歌词
@@ -185,7 +187,8 @@ private:
     void playModel(int choose);//模式选择
     void sigletonShow(bool isShow);
     bool checkSong(const QString& songName);//文件校验/是否歌曲
-
+     bool isLive(const QString& songName);//是否直播
+     bool isVideo(const QString& songName);//是否视频
     // 界面成员
     //***基本信息
     Direction               m_direct;       //方向
