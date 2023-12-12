@@ -248,6 +248,9 @@ MusicShow::MusicShow(QWidget *parent) :
     m_listView->setModel(m_model);
     m_listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
+    m_listView->installEventFilter(this);
+//    m_video->installEventFilter(this);
+//    m_model->installEventFilter(this);
     //    // 导入python进行爬虫
     //    Py_Initialize();
     //    if( !Py_IsInitialized() )
@@ -601,9 +604,9 @@ bool MusicShow::checkSong(const QString &songName)
             return true;
         }
     }
-//    if(isVideo(songName) || isLive(songName))return false;
+    //    if(isVideo(songName) || isLive(songName))return false;
     // 非曲类 也展示词
-//    synchronyLrc(songName);
+    //    synchronyLrc(songName);
     return false;
 }
 // 是否是直播源
@@ -764,6 +767,22 @@ void MusicShow::adjustModel()
         }
         m_fileList->insertMedia(i,QUrl(songName));
     }
+}
+
+void MusicShow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Plus)
+    {
+        int val = m_lound->value();
+        m_lound->setValue(val+1);
+        event->accept();
+    }else if (event->key() == Qt::Key_Minus)
+    {
+        int val = m_lound->value();
+        m_lound->setValue(val-1);
+        event->accept();
+    }
+    QWidget::keyPressEvent(event);
 }
 
 // 选择列表当中的曲目
@@ -1003,6 +1022,32 @@ void MusicShow::wheelEvent(QWheelEvent *event)
     return QWidget::wheelEvent(event);
 }
 
+bool MusicShow::eventFilter(QObject *target, QEvent *event)
+{
+    qDebug()<<target->objectName()<<event->type();
+    if(target == m_listView)
+       {
+           // 键盘事件
+           if (event->type() == QEvent::KeyPress)
+           {
+               int key = ((QKeyEvent *)event)->key();
+               int val = m_lound->value();
+               if (key== Qt::Key_Plus)
+               {
+                   m_lound->setValue(val+1);
+
+               }else if (key == Qt::Key_Minus)
+               {
+                   m_lound->setValue(val-1);
+               }
+               return true;
+           }
+       }
+
+       // standard event processing
+       return QWidget::eventFilter(target, event);
+}
+
 
 void MusicShow::onLoading()
 {
@@ -1126,9 +1171,9 @@ void MusicShow::on_loading_web()
                 file.close();
             }
         }else if (!addWeb(webAddr)){// 添加网址
-            isLoadNow = false;
-            inputWeb->setEnabled(true);
-            return ;
+//            isLoadNow = false;
+//            inputWeb->setEnabled(true);
+//            return ;
         }
 
         // 发送结束信号
@@ -1202,14 +1247,14 @@ void MusicShow::listTurnVedio(bool isVideo)
     m_layout->removeWidget(m_listView);
     m_layout->removeWidget(m_video);
     if(isVideo){
-//        m_listView->setStyleSheet("QListView { background-color: #f0f0f0; }");
+        //        m_listView->setStyleSheet("QListView { background-color: #f0f0f0; }");
         m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         m_listView->setFixedWidth(130);
         m_layout->addWidget(m_video,0,1,5,5);
         m_layout->addWidget(m_listView,0,0,1,1);
     }else{
-//        m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-//        m_listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        //        m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+        //        m_listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         m_listView->setSizePolicy( QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
         m_listView->setMaximumWidth(4*m_play->width());
         m_listView->setMinimumWidth(3*m_play->minimumWidth());
@@ -1740,17 +1785,16 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty()){
             m_mapAnotherName.remove(songName);
         }
-        break;
+
     }
+        break;
     case QMediaPlayer::NoMedia:
-    {
         qDebug()<<400;
         break;
-    }
     case QMediaPlayer::LoadingMedia:
         sigletonShow(false);//正常窗体
         qDebug()<<500;
-//        setHint("正在加载",false);
+        //        setHint("正在加载",false);
         //adjustShow();
         break;
     case QMediaPlayer::LoadedMedia:
@@ -1765,11 +1809,11 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         break;
     case QMediaPlayer::BufferedMedia:
         qDebug()<<900;
-        QThread::usleep(100);
+        //        QThread::usleep(100);
         break;
     default:
         qDebug()<<000000<<status;
         break;
     }
-
+    QThread::usleep(100);
 }

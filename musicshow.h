@@ -93,7 +93,7 @@ private:
 
 protected:
     // 键盘事件——控制状态
-    //    void keyPressEvent(QKeyEvent *event);
+    void keyPressEvent(QKeyEvent *event);
     // 鼠标事件——控制显示
     void mouseDoubleClickEvent(QMouseEvent *event);
     // 拖拽界面
@@ -107,7 +107,7 @@ protected:
     // 音量控制
     void wheelEvent(QWheelEvent *event);
     // 事件过滤
-    //    bool eventFilter(QObject *target, QEvent *event);
+    bool eventFilter(QObject *target, QEvent *event);
 
     //bool nativeEvent(const QByteArray& eventType, void *message, long *result);
 private slots:

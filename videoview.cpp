@@ -82,6 +82,7 @@ void VideoWidget::keyPressEvent(QKeyEvent *event)
     {
       setFullScreen(false);
     }
+  QWidget::keyPressEvent(event);
 }
 
 void VideoWidget::wheelEvent(QWheelEvent *event)
