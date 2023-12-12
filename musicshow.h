@@ -126,6 +126,7 @@ private slots:
     void onSingTheSong(int index);
     void onSelectitem(const QModelIndex &index);
     void onSelectitem_singal(const QModelIndex &index);
+    void onPlaySelect();
 
     // 播放
     void onPlay();
@@ -172,9 +173,13 @@ private slots:
 
     // 关闭定时器
     void onTimeOut();
+
     // 清空列表
+    void onContextmenu(const QPoint&);
+    void onDeleteItem();
     void onClear();
 
+    // 异常处理
     void on_err(QMediaPlayer::Error error);
 
 signals:
@@ -229,7 +234,9 @@ private:
     QAction*                m_actTop;     // 置顶
     QAction*                m_actHide;    // 隐藏
     QAction*                m_actMute;    // 静音
+    QAction*                m_actPlay;    // 播放
     QAction*                m_actLry;     // 显示歌词
+    QAction*                m_actDelete;  // 删除
     QAction*                m_actClear;   // 清空
     QAction*                m_actSigleton;// 单窗体
     WebView*                m_networdShow;// 网页

@@ -105,7 +105,7 @@ MusicShow::MusicShow(QWidget *parent) :
     
     m_hintInfo = new QLabel(tr("祝君好心情")); //播放信息
     m_playInfo = new QLabel(tr("播放信息")); //播放信息
-    m_title = new BlinkBtn("音乐分享"); //标题
+    m_title = new BlinkBtn("富贵临門"); //标题
     m_speedControl = new SpeedControl();//进度标题
     m_timer = new QTimer(); //定时器
 
@@ -130,14 +130,16 @@ MusicShow::MusicShow(QWidget *parent) :
     m_networdShow = new WebView(this);
     m_layout = new QGridLayout();//布局
     m_popMenu = new QMenu();//右键弹出的菜单
-    m_actBorders = new QAction(this);//右键无边框显示
-    m_actQuit = new QAction(this);//右键退出
-    m_actTop = new QAction(this);//置顶
-    m_actHide = new QAction(this);//隐藏
-    m_actMute = new QAction(this);//静音
-    m_actLry = new QAction(this);//显示歌词
-    m_actClear = new QAction(this);//清空列表
-    m_actSigleton = new QAction(this);//单窗体
+    m_actBorders = new QAction(tr("万寿无疆"),this);//右键无边框显示
+    m_actQuit = new QAction(tr("闭月羞花"),this);//右键退出
+    m_actTop = new QAction(tr("独步青云"),this);//置顶
+    m_actHide = new QAction(tr("韬光养晦"),this);//隐藏
+    m_actMute = new QAction(tr("鸦默雀静"),this);//静音
+    m_actPlay = new QAction(tr("一曲肝肠"),this);//播放
+    m_actLry = new QAction(tr("无言以对"),this);//隐藏歌词
+    m_actDelete = new QAction(tr("一笔勾销"),this);//删除子项
+    m_actClear = new QAction(tr("一扫而空"),this);//清空列表
+    m_actSigleton = new QAction(tr("一幕了然"),this);//单窗体
     m_effect = new QGraphicsOpacityEffect(this);//效果控制
     m_hintInfo -> setGraphicsEffect(m_effect);
     this->setMouseTracking(true); // 希望获取到鼠标移动时，光标靠近的位置。
@@ -190,14 +192,7 @@ MusicShow::MusicShow(QWidget *parent) :
     m_title->setTimeInterval(100);
     m_popMenu->heightForWidth(80);
     m_timeUp->display("00:00");
-    m_actTop->setText(tr("拼醉花前"));
-    m_actMute->setText(tr("颜羞羞言"));
-    m_actHide->setText(tr("思念于心"));
-    m_actSigleton->setText(tr("一幕了然"));
-    m_actBorders->setText(tr("万寿无疆"));
-    m_actLry->setText(tr("暗流涌动"));
-    m_actClear->setText(tr("五蕴皆空"));
-    m_actQuit->setText(tr("闭月羞花"));
+
     
     // 快捷键
     m_play->setShortcut(QKeySequence(Qt::Key_Space));
@@ -247,10 +242,12 @@ MusicShow::MusicShow(QWidget *parent) :
     m_listView->setWordWrap(true);
     m_listView->setModel(m_model);
     m_listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-
     m_listView->installEventFilter(this);
-//    m_video->installEventFilter(this);
-//    m_model->installEventFilter(this);
+    m_listView->setContextMenuPolicy(Qt::CustomContextMenu);
+
+
+    //    m_video->installEventFilter(this);
+    //    m_model->installEventFilter(this);
     //    // 导入python进行爬虫
     //    Py_Initialize();
     //    if( !Py_IsInitialized() )
@@ -315,12 +312,16 @@ MusicShow::MusicShow(QWidget *parent) :
     //右键弹框
     connect(m_actHide, &QAction::triggered, this, &MusicShow::close);
     connect(m_actMute, SIGNAL(triggered(bool)), this, SLOT(onMuted(bool)));
+    connect(m_actPlay, &QAction::triggered, this, &MusicShow::onPlaySelect);
     connect(m_actBorders, &QAction::triggered, this, &MusicShow::on_noBoardStyle);
     connect(m_actTop, &QAction::triggered, this, &MusicShow::on_topWindow);
     connect(m_actSigleton, &QAction::triggered, this, &MusicShow::onSigletonShow);
     connect(m_actLry, &QAction::triggered, this, &MusicShow::onSongShow);
+    connect(m_actDelete, &QAction::triggered, this, &MusicShow::onDeleteItem);
     connect(m_actClear, &QAction::triggered, this, &MusicShow::onClear);
     connect(m_actQuit,SIGNAL(triggered()),qApp,SLOT(quit()));
+    connect(m_listView, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(onContextmenu(const QPoint&)));
+
     //播放速度
     connect(m_player,SIGNAL(playbackRateChanged(qreal)),m_player,SLOT(setPlaybackRate(qreal)));
     connect(m_speedControl,SIGNAL(sigSlowDown()),this,SLOT(onSlowDown()));
@@ -782,6 +783,11 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
         m_lound->setValue(val-1);
         event->accept();
     }
+    //    else if (event->key() == Qt::Key_Escape)
+    //        {
+    //            setHint("");
+    //            event->accept();
+    //        }
     QWidget::keyPressEvent(event);
 }
 
@@ -827,6 +833,12 @@ void MusicShow::onSelectitem_singal(const QModelIndex &index)
     changeMouseIcon('D');
 }
 
+void MusicShow::onPlaySelect()
+{
+    QModelIndex index = m_listView->currentIndex();
+    onSingTheSong(index.row());
+}
+
 // 播放状态
 void MusicShow::onStatus(QMediaPlayer::State status)
 {
@@ -866,7 +878,7 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
     if(event->button()==Qt::LeftButton)
     {
         m_listView->setMinimumWidth(3*m_play->minimumWidth());
-        m_listView->setMaximumWidth(4*m_play->maximumWidth());
+        m_listView->setMaximumWidth(m_play->maximumWidth());
         windowState()!=Qt::WindowFullScreen?setWindowState(Qt::WindowFullScreen):setWindowState(Qt::WindowNoState);
     }
     event->ignore();
@@ -983,19 +995,24 @@ void MusicShow::mouseReleaseEvent(QMouseEvent *event)
 
 void MusicShow::contextMenuEvent(QContextMenuEvent *event)
 {
+
+    if(m_listView->geometry().contains(this->mapFromGlobal(QCursor::pos()))){
+        return;
+    }
     m_popMenu->clear();
     m_popMenu->addAction(m_actTop);
     //m_popMenu->addAction(m_actBorders);//有无边框
     m_popMenu->addAction(m_actHide);
+    m_popMenu->addSeparator();    //分割线
     m_popMenu->addAction(m_actMute);
     m_popMenu->addAction(m_actLry);
+    m_popMenu->addSeparator();    //分割线
     m_popMenu->addAction(m_actSigleton);
-    m_popMenu->addAction(m_actClear);
+    m_popMenu->addSeparator();    //分割线
     m_popMenu->addAction(m_actQuit);
-    
-    
-    
+
     //菜单出现的位置为当前鼠标的位置
+    m_popMenu->setStyleSheet(tr("QMenu{background-color:#4169E1;}"));
     m_popMenu->exec(QCursor::pos());
     event->accept();
 }
@@ -1024,28 +1041,27 @@ void MusicShow::wheelEvent(QWheelEvent *event)
 
 bool MusicShow::eventFilter(QObject *target, QEvent *event)
 {
-    qDebug()<<target->objectName()<<event->type();
     if(target == m_listView)
-       {
-           // 键盘事件
-           if (event->type() == QEvent::KeyPress)
-           {
-               int key = ((QKeyEvent *)event)->key();
-               int val = m_lound->value();
-               if (key== Qt::Key_Plus)
-               {
-                   m_lound->setValue(val+1);
+    {
+        // 键盘事件
+        if (event->type() == QEvent::KeyPress)
+        {
+            int key = ((QKeyEvent *)event)->key();
+            int val = m_lound->value();
+            if (key== Qt::Key_Plus)
+            {
+                m_lound->setValue(val+1);
 
-               }else if (key == Qt::Key_Minus)
-               {
-                   m_lound->setValue(val-1);
-               }
-               return true;
-           }
-       }
+            }else if (key == Qt::Key_Minus)
+            {
+                m_lound->setValue(val-1);
+            }
+            return true;
+        }
+    }
 
-       // standard event processing
-       return QWidget::eventFilter(target, event);
+    // standard event processing
+    return QWidget::eventFilter(target, event);
 }
 
 
@@ -1107,12 +1123,16 @@ void MusicShow::on_loading_dir()
     isDir = true;
     //  m_networdShow->stop();
     //  m_networdShow->setHidden(true);
+    m_actTop->setText("至高无上");
     setHint(tr("加载中"),false);
-
-
+    setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+    showNormal();
     QString dir = QFileDialog::getExistingDirectory(Q_NULLPTR, QString("请选择歌曲目录"), m_songsDir,QFileDialog::DontUseNativeDialog|QFileDialog::ReadOnly|QFileDialog::ShowDirsOnly);
     qDebug()<<dir;
-    if(dir.isEmpty())return;
+    if(dir.isEmpty()){
+        setHint(tr("取消加载"));
+        return;
+    }
     m_songsDir = dir;
     if(getAllFiles(dir).isEmpty() ){
         setHint(tr("没有内容可加载"));
@@ -1171,9 +1191,9 @@ void MusicShow::on_loading_web()
                 file.close();
             }
         }else if (!addWeb(webAddr)){// 添加网址
-//            isLoadNow = false;
-//            inputWeb->setEnabled(true);
-//            return ;
+            //            isLoadNow = false;
+            //            inputWeb->setEnabled(true);
+            //            return ;
         }
 
         // 发送结束信号
@@ -1256,8 +1276,9 @@ void MusicShow::listTurnVedio(bool isVideo)
         //        m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
         //        m_listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         m_listView->setSizePolicy( QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
-        m_listView->setMaximumWidth(4*m_play->width());
         m_listView->setMinimumWidth(3*m_play->minimumWidth());
+        m_listView->setMaximumWidth(m_play->maximumWidth());
+
         m_layout->addWidget(m_video,0,0,5,6);
         m_layout->addWidget(m_listView,1,1,4,4);
     }
@@ -1388,9 +1409,9 @@ void MusicShow::onMuted(bool)
     isMute = !isMute;
     m_player->setMuted(isMute);
     if(isMute)
-        m_actMute->setText(tr("二耳聪心"));
+        m_actMute->setText(tr("逖听远闻"));
     else
-        m_actMute->setText(tr("颜羞羞言"));
+        m_actMute->setText(tr("鸦雀无声"));
 }
 
 // 持续时间
@@ -1522,7 +1543,7 @@ void MusicShow::on_topWindow()
     
     if(m_isTop)
     {
-        m_actTop->setText("拼醉花前");
+        m_actTop->setText("处尊居显");
         this->setWindowFlags(
                     Qt::Window \
                     |Qt::FramelessWindowHint\
@@ -1533,7 +1554,7 @@ void MusicShow::on_topWindow()
     }
     else
     {
-        m_actTop->setText("取消最前");
+        m_actTop->setText("平平无奇");
         if (isNoBorder)
             this->setWindowFlags(Qt::WindowStaysOnTopHint);
         else
@@ -1751,6 +1772,36 @@ void MusicShow::onTimeOut()
 {
     m_hintInfo->hide();
     m_timer->stop();
+}
+
+void MusicShow::onContextmenu(const QPoint &pt)
+{
+    if(!m_listView->selectionModel()->selectedIndexes().empty())
+    {
+        m_popMenu->clear();
+        m_popMenu->setStyleSheet(tr("QMenu{background-color:#CCAC88;border:1px solid rgba(82,130,164,1);}"));
+        m_popMenu->addAction(m_actPlay);
+        m_popMenu->addSeparator();    //分割线
+        m_popMenu->addAction(m_actDelete);
+        m_popMenu->addSeparator();    //分割线
+        m_popMenu->addAction(m_actClear);
+        m_popMenu->exec(QCursor::pos());
+    }
+}
+
+void MusicShow::onDeleteItem()
+{
+    QModelIndex index = m_listView->currentIndex();
+    QString songName = m_model->data(index).toString();
+    if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty()){
+        songName = m_mapAnotherName[songName];
+        m_mapAnotherName.remove(songName);
+    }
+    qDebug()<<"onDeleteItem "<<m_playing.toString()<<songName;
+    if(m_playing.toString() == songName){
+        m_player->stop();
+    }
+    m_model->removeRow(index.row());
 }
 
 void MusicShow::on_err(QMediaPlayer::Error error)
