@@ -73,26 +73,27 @@ public:
     // 添加歌曲
     void addSong(QString songAddr);
     void addSongList(QStringList songAddrs);
-    // 网络加载
-    bool addWeb(QString webAddr);
+    bool addWeb(QString webAddr);// 网络加载
 
     // 正播放的曲目
     QUrl playing();
     // 所有曲目
     QStringList getAllFiles(const QString& dir);
+
     // 同步歌词
     void synchronyLrc(const QString &fileName);
 
     // 设置提示信息
     void setHint(QString fileName, bool isRightIn = true,int showtime = 30);
-
 private:
-    //   (需检测是否是视频)
+    //  (需检测是否是视频)
     bool adjustShow();
+    //  model与媒体资源同步
+    void adjustModel();
 
 protected:
     // 键盘事件——控制状态
-//    void keyPressEvent(QKeyEvent *event);
+    //    void keyPressEvent(QKeyEvent *event);
     // 鼠标事件——控制显示
     void mouseDoubleClickEvent(QMouseEvent *event);
     // 拖拽界面
@@ -106,7 +107,7 @@ protected:
     // 音量控制
     void wheelEvent(QWheelEvent *event);
     // 事件过滤
-//    bool eventFilter(QObject *target, QEvent *event);
+    //    bool eventFilter(QObject *target, QEvent *event);
 
     //bool nativeEvent(const QByteArray& eventType, void *message, long *result);
 private slots:
@@ -125,7 +126,6 @@ private slots:
     void onSingTheSong(int index);
     void onSelectitem(const QModelIndex &index);
     void onSelectitem_singal(const QModelIndex &index);
-
 
     // 播放
     void onPlay();
@@ -147,6 +147,7 @@ private slots:
     void onDuration(qint64 duration);
     // 播放时间
     void onPlayTimer(qint64 value);
+
     // 音量调节
     void on_lound_sliderMoved(int position);
     // 静音
@@ -188,8 +189,9 @@ private:
     void playModel(int choose);//模式选择
     void sigletonShow(bool isShow);
     bool checkSong(const QString& songName);//文件校验/是否歌曲
-     bool isLive(const QString& songName);//是否直播
-     bool isVideo(const QString& songName);//是否视频
+    bool isLive(const QString& songName);//是否直播
+    bool isVideo(const QString& songName);//是否视频
+
     // 界面成员
     //***基本信息
     Direction               m_direct;       //方向
@@ -217,6 +219,7 @@ private:
     QMediaPlaylist*         m_fileList; //播放资源
     VideoView*              m_video;    //视频展示
     MyLyric*                m_songLrc;  //歌词显示
+    QStringListModel*       m_model;    //列表信息
 
     //***界面优化
     QGridLayout*            m_layout;     // 布局
@@ -240,7 +243,7 @@ private:
     bool                    m_isVideo:1;
     bool                    m_isNext:1;
     float                   m_opaclevel;
-    QStringListModel*       m_model;
+
 
 
     qint64                  m_duration;// 时间周期
