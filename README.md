@@ -17,18 +17,14 @@ Qt制作的一款音乐播放器
 ```
 
 ---效果展示---
+<h3>视频</h3>
 ![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20053613.png)
-![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20052622.png)
-![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20052708.png)
 
-![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20052752.png)
+<h3>电视直播</h3>
+![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-14%20021022.png)
+![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-14%20020730.png)
 
-![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20052936.png)
-
-![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20053002.png)
-
-![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20053030.png)
-
+<h3>歌曲</h3>
 ![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20055501.png)
 
 ---声明---      
