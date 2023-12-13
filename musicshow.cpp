@@ -146,8 +146,8 @@ MusicShow::MusicShow(QWidget *parent) :
     //    this->grabKeyboard();[弃用]
     this->setWindowFlags(Qt::Window|Qt::FramelessWindowHint|Qt::WindowSystemMenuHint|Qt::WindowMinimizeButtonHint|Qt::WindowMaximizeButtonHint);
 
-    m_title->setFixedHeight(85);
-    m_playInfo->setFixedHeight(85);
+    m_title->setFixedHeight(72);
+    m_playInfo->setFixedHeight(72);
 
     // 布局
     this->setLayout(m_layout);
@@ -1254,12 +1254,14 @@ void MusicShow::listTurnVedio(bool isVideo)
     m_layout->removeWidget(m_listView);
     m_layout->removeWidget(m_video);
     if(isVideo){
-        //        m_listView->setStyleSheet("QListView { background-color: #412550; }");
+        m_listView->setStyleSheet("border-image:url(:/img/bg1.jpg);background-color: #412550;background-position:center;background-repeat:no-repeat;");
         m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        m_listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         m_listView->setFixedWidth(130);
         m_layout->addWidget(m_video,0,1,5,5);
         m_layout->addWidget(m_listView,0,0,1,1);
     }else{
+        m_listView->setStyleSheet("border-image:url(:/img/bg3.jpg);background-position:center;background-repeat:no-repeat;");
         m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
         m_listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         m_listView->setSizePolicy( QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));

@@ -18,8 +18,8 @@ QListView
 {
     border-image: url(:/img/bg3.jpg);
     color:#000000;
-    background-position:center;
-    background-repeat:inherit;
+    background-position: center;
+    background-repeat: no-repeat;
     background-color: rgb(255, 170, 255);
     font-weight:bold;
     font-size: 14px;
@@ -34,20 +34,19 @@ QListView::item:alternate {
 
 /* 当条目被选中时 */
 QListView::item:selected {
+        color:#FF0000;
         border:2px solid #6a6ea9;
 }
 
 /* 当条目被选中,并且不是有效的 */
 QListView::item::selected:!active {
-        background:qlineargradient(x1:0, y1:0,x2:1,y2:0, stop:0 #6a6ea9, stop:1 #888dd9);
+        background:qlineargradient(x1:0, y1:0,x2:1,y2:0, stop:0 #6a6ea9, stop:1 #228B22);
 }
 
 /* 鼠标县浮在条目上 */
 QListView::item::hover {
-        background:qlineargradient(x1:0, y1:0,x2:1,y2:0, stop:0 #6B8E23, stop:1 #FFD700);
+        background:qlineargradient(x1:0, y1:0,x2:1,y2:0, stop:0 #6B8E23, stop:1 #FF8C00);
 }
-
-
 
 QPushButton:pressed
 {
