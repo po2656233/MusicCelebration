@@ -87,7 +87,7 @@ public:
     void setHint(QString fileName, bool isRightIn = true,int showtime = 30);
 private:
     //  (需检测是否是视频)
-    bool adjustShow();
+    void adjustShow();
     //  model与媒体资源同步
     void adjustModel();
 
