@@ -1811,8 +1811,6 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         break;
     case QMediaPlayer::LoadedMedia:
         qDebug()<<600;
-        m_player->stop();
-        m_player->play();
         m_playInfo->setText("播放信息");
         break;
     case QMediaPlayer::StalledMedia:
