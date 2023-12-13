@@ -776,9 +776,7 @@ void MusicShow::onSingTheSong(int index)
     }
     m_playing = m_fileList->currentMedia().canonicalUrl();
     if (!m_playing.isValid() || m_playing.isEmpty()) return;
-    if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
-        m_player->play();
-    adjustShow();
+    onPlay();
 }
 
 // 选择列表当中的曲目
@@ -867,7 +865,7 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
         m_listView->setMaximumWidth(m_play->maximumWidth());
         windowState()!=Qt::WindowFullScreen?setWindowState(Qt::WindowFullScreen):setWindowState(Qt::WindowNoState);
         adjustShow();
-//        event->accept();
+        //        event->accept();
     }
 
     QWidget::mouseDoubleClickEvent(event);
@@ -887,8 +885,8 @@ void MusicShow::mousePressEvent(QMouseEvent *event)
             m_dragPosition = event->globalPos() - pos();
         }
     }
-//    event->ignore();
-//    QWidget::mousePressEvent(event);
+    //    event->ignore();
+    //    QWidget::mousePressEvent(event);
 }
 
 void MusicShow::mouseMoveEvent(QMouseEvent *event)
@@ -1255,7 +1253,7 @@ void MusicShow::listTurnVedio(bool isVideo)
     m_layout->removeWidget(m_listView);
     m_layout->removeWidget(m_video);
     if(isVideo){
-        m_listView->setStyleSheet("QListView { background-color: #412550; }");
+        //        m_listView->setStyleSheet("QListView { background-color: #412550; }");
         m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         m_listView->setFixedWidth(130);
         m_layout->addWidget(m_video,0,1,5,5);
@@ -1449,7 +1447,7 @@ void MusicShow::onSlowDown()
 {
     if(m_isNext || !m_horizontalSlider->isEnabled()){
         m_fileList->previous();
-        adjustShow();
+//        adjustShow();
         return;
     }
     if(1.0 < g_rate){
@@ -1479,7 +1477,7 @@ void MusicShow::onQuickUp()
 {
     if(m_isNext|| !m_horizontalSlider->isEnabled()){
         m_fileList->next();
-        adjustShow();
+//        adjustShow();
         return;
     }
     if(g_rate<1.0){
@@ -1687,7 +1685,6 @@ void MusicShow::onPlay()
         m_player->play();
     else
         m_fileList->next();
-    adjustShow();
 }
 
 // 暂停播放
@@ -1811,7 +1808,7 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         sigletonShow(false);//正常窗体
         qDebug()<<500;
         //        setHint("正在加载",false);
-        //        adjustShow();
+        adjustShow();
         break;
     case QMediaPlayer::LoadedMedia:
         qDebug()<<600;
