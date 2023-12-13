@@ -501,7 +501,7 @@ bool MusicShow::addWeb(QString webAddr)
 {
     if (webAddr.isEmpty()){
         m_loading->setHidden(false);
-        return true;
+        return false;
     }
 
     // 解析地址
@@ -1191,9 +1191,9 @@ void MusicShow::on_loading_web()
                 file.close();
             }
         }else if (!addWeb(webAddr)){// 添加网址
-            //            isLoadNow = false;
-            //            inputWeb->setEnabled(true);
-            //            return ;
+            isLoadNow = false;
+            inputWeb->setEnabled(true);
+            return ;
         }
 
         // 发送结束信号
@@ -1267,14 +1267,14 @@ void MusicShow::listTurnVedio(bool isVideo)
     m_layout->removeWidget(m_listView);
     m_layout->removeWidget(m_video);
     if(isVideo){
-        //        m_listView->setStyleSheet("QListView { background-color: #f0f0f0; }");
+        m_listView->setStyleSheet("QListView { background-color: #412550; }");
         m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         m_listView->setFixedWidth(130);
         m_layout->addWidget(m_video,0,1,5,5);
         m_layout->addWidget(m_listView,0,0,1,1);
     }else{
-        //        m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-        //        m_listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+        m_listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         m_listView->setSizePolicy( QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
         m_listView->setMinimumWidth(3*m_play->minimumWidth());
         m_listView->setMaximumWidth(m_play->maximumWidth());
