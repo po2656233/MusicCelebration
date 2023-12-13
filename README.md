@@ -18,16 +18,20 @@ Qt制作的一款音乐播放器
 
 ---效果展示---
 <h3>视频</h3>
-![image](exemple/home.png)
+
+![视频](exemple/home.png) 
 
 <h3>电视直播</h3>
+
 ![电视直播加载](exemple/live1.png)
 ![电视直播播放](exemple/live2.png)
 
 <h3>歌曲</h3>
+
 ![歌曲](exemple/song1.png)
 
 <h3>操作</h3>
+
 ![操作](exemple/x1.png)
 ![操作](exemple/x2.png)
 ![操作](exemple/x3.png)
