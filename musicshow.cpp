@@ -1767,7 +1767,9 @@ void MusicShow::onDeleteItem()
     if(m_playing.toString() == songName){
         m_player->stop();
     }
+    m_fileList->removeMedia(index.row());
     m_model->removeRow(index.row());
+
 }
 
 void MusicShow::on_err(QMediaPlayer::Error error)
