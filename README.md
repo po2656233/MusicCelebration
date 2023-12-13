@@ -18,22 +18,22 @@ Qt制作的一款音乐播放器
 
 ---效果展示---
 <h3>视频</h3>
-![视频](https://github.com/po2656233/MusicCelebration/blob/main/exemple/home.png)
+![image](exemple/home.png)
 
 <h3>电视直播</h3>
-![电视直播加载](https://github.com/po2656233/MusicCelebration/blob/main/exemple/exemple/live1.png)
-![电视直播播放](https://github.com/po2656233/MusicCelebration/blob/main/exemple/exemple/live2.png)
+![电视直播加载](exemple/live1.png)
+![电视直播播放](exemple/live2.png)
 
 <h3>歌曲</h3>
-![歌曲](https://github.com/po2656233/MusicCelebration/blob/main/exemple/song1.png)
+![歌曲](exemple/song1.png)
 
 <h3>操作</h3>
-![操作](https://github.com/po2656233/MusicCelebration/blob/main/exemple/x1.png)
-![操作](https://github.com/po2656233/MusicCelebration/blob/main/exemple/x2.png)
-![操作](https://github.com/po2656233/MusicCelebration/blob/main/exemple/x3.png)
-![操作](https://github.com/po2656233/MusicCelebration/blob/main/exemple/x4.png)
-![操作](https://github.com/po2656233/MusicCelebration/blob/main/exemple/x5.png)
-![操作](https://github.com/po2656233/MusicCelebration/blob/main/exemple/x6.png)
+![操作](exemple/x1.png)
+![操作](exemple/x2.png)
+![操作](exemple/x3.png)
+![操作](exemple/x4.png)
+![操作](exemple/x5.png)
+![操作](exemple/x6.png)
 
 ---声明---      
 禁止用于商业用途，禁止用于违反国家法律法规的行为，禁止用于任何非法目的
