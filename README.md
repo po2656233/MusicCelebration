@@ -21,8 +21,8 @@ Qt制作的一款音乐播放器
 ![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20053613.png)
 
 <h3>电视直播</h3>
-![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-14%20021022.png)
-![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-14%20020730.png)
+![image](exemple/屏幕截图 2023-12-14 021022.png)
+![image](exemple/屏幕截图 2023-12-14 020730.png)
 
 <h3>歌曲</h3>
 ![image](https://github.com/po2656233/MusicCelebration/blob/main/exemple/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-12-07%20055501.png)
