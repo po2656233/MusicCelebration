@@ -1507,6 +1507,9 @@ void MusicShow::onQuickUp()
 //指定播放的歌曲
 void MusicShow::onSingTheSong(int index)
 {
+    if(index < 0){
+        return;
+    }
     qDebug()<<" 当前索引: "<<index;
     m_fileList->setCurrentIndex(index);
     m_playing = m_fileList->currentMedia().canonicalUrl();
@@ -1860,11 +1863,11 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         break;
     case QMediaPlayer::BufferedMedia:
         qDebug()<<900;
-        //        QThread::usleep(100);
+         QThread::usleep(100);
         break;
     default:
         qDebug()<<000000<<status;
         break;
     }
-    QThread::usleep(100);
+
 }
