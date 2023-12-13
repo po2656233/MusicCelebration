@@ -18,6 +18,8 @@ QListView
 {
     border-image: url(:/img/bg3.jpg);
     color:#000000;
+    background-position:center;
+    background-repeat:inherit;
     background-color: rgb(255, 170, 255);
     font-weight:bold;
     font-size: 14px;

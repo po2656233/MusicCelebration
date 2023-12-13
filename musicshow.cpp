@@ -770,7 +770,7 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
 //指定播放的歌曲
 void MusicShow::onSingTheSong(int index)
 {
-    qDebug()<<"onSingTheSong"<<index;
+    //    qDebug()<<"onSingTheSong"<<index;
     if(index < 0){
         return;
     }
@@ -798,7 +798,7 @@ void MusicShow::onSelectitem(const QModelIndex &index)
     }
     // 若之前非暂停状态,则需停止界面信息
     if(!justPlay){
-        qDebug()<<"onSelectitem==: "<<index.row();
+        //        qDebug()<<"onSelectitem==: "<<index.row();
         m_fileList->setCurrentIndex(index.row());
         m_playing = m_fileList->currentMedia().canonicalUrl();
         m_hintInfo->hide();
@@ -812,7 +812,7 @@ void MusicShow::onSelectitem(const QModelIndex &index)
 
 void MusicShow::onSelectitem_singal(const QModelIndex &index)
 {
-    qDebug()<<"onSelectitem_singal==: "<<index;
+    //    qDebug()<<"onSelectitem_singal==: "<<index;
     m_listView->setToolTip(index.data().toString());
     changeMouseIcon('D');
 }
@@ -821,7 +821,7 @@ void MusicShow::onSelectitem_singal(const QModelIndex &index)
 void MusicShow::onPlaySelect()
 {
     QModelIndex index = m_listView->currentIndex();
-    qDebug()<<"onPlaySelect "<<index.row();
+    //    qDebug()<<"onPlaySelect "<<index.row();
     onSingTheSong(index.row());
 }
 
@@ -1792,12 +1792,12 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
     {
         qDebug()<<300;
         QModelIndex index = m_listView->currentIndex();
-        m_model->removeRow(index.row());
         QString songName = m_model->data(index).toString();
         if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty()){
             m_mapAnotherName.remove(songName);
         }
-
+        m_model->removeRow(index.row());
+        m_fileList->removeMedia(index.row());
     }
         break;
     case QMediaPlayer::NoMedia:
