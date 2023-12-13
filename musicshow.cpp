@@ -774,6 +774,8 @@ void MusicShow::onSingTheSong(int index)
     if(index < 0){
         return;
     }
+    m_fileList->setCurrentIndex(index);
+    m_listView->setCurrentIndex(m_model->index(index));
     m_playing = m_fileList->currentMedia().canonicalUrl();
     if (!m_playing.isValid() || m_playing.isEmpty()) return;
     onPlay();
@@ -865,7 +867,6 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
         m_listView->setMaximumWidth(m_play->maximumWidth());
         windowState()!=Qt::WindowFullScreen?setWindowState(Qt::WindowFullScreen):setWindowState(Qt::WindowNoState);
         adjustShow();
-        //        event->accept();
     }
 
     QWidget::mouseDoubleClickEvent(event);
@@ -1447,7 +1448,6 @@ void MusicShow::onSlowDown()
 {
     if(m_isNext || !m_horizontalSlider->isEnabled()){
         m_fileList->previous();
-//        adjustShow();
         return;
     }
     if(1.0 < g_rate){
@@ -1477,7 +1477,6 @@ void MusicShow::onQuickUp()
 {
     if(m_isNext|| !m_horizontalSlider->isEnabled()){
         m_fileList->next();
-//        adjustShow();
         return;
     }
     if(g_rate<1.0){
