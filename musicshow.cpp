@@ -1464,7 +1464,10 @@ void MusicShow::onSlowDown()
 
 void MusicShow::onRecover()
 {
+    m_listView->selectionModel()->clear();
+    m_listView->selectionModel()->select(m_model->index(m_fileList->currentIndex()),QItemSelectionModel::Select);
     if(!m_horizontalSlider->isEnabled())return;
+
     if(!m_isNext){
         g_rate = 1.0;
         emit m_player->playbackRateChanged(g_rate);
