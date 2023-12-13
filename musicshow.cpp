@@ -99,13 +99,13 @@ MusicShow::MusicShow(QWidget *parent) :
     m_dragPosition(QPoint(0,0)){
     
     // 保存歌曲的目录
-    m_songsDir = QDir::currentPath()+"\\songs";
+    m_songsDir = QCoreApplication::applicationDirPath()+"\\songs";
     QDir dir(m_songsDir);
     if(!dir.exists())dir.mkdir(m_songsDir);
     
     m_hintInfo = new QLabel(tr("祝君好心情")); //播放信息
     m_playInfo = new QLabel(tr("播放信息")); //播放信息
-    m_title = new BlinkBtn("富贵临門"); //标题
+    m_title = new BlinkBtn("高山流水"); //标题
     m_speedControl = new SpeedControl();//进度标题
     m_timer = new QTimer(); //定时器
 
