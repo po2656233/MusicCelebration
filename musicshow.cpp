@@ -1686,10 +1686,13 @@ void MusicShow::onClear()
 // 播放
 void MusicShow::onPlay()
 {
+    adjustShow();
+    if(m_player->state() == QMediaPlayer::PlayingState) return;
     if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
         m_player->play();
     else
         m_fileList->next();
+
 }
 
 // 暂停播放
@@ -1818,8 +1821,9 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         adjustShow();
         break;
     case QMediaPlayer::LoadedMedia:
-        qDebug()<<600;
+        qDebug()<<600<<"已经停止";
         m_playInfo->setText("播放信息");
+        onStop();
         break;
     case QMediaPlayer::StalledMedia:
         qDebug()<<700;
