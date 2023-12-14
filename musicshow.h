@@ -193,6 +193,7 @@ private:
     void randomPlay();// 随机播放
     void playModel(int choose);//模式选择
     void sigletonShow(bool isShow);
+    void saveLiveInfo(const QString& data,bool isBatch = false);// 保存直播网址信息
     bool checkSong(const QString& songName);//文件校验/是否歌曲
     bool isLive(const QString& songName);//是否直播
     bool isVideo(const QString& songName);//是否视频

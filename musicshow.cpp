@@ -104,7 +104,7 @@ MusicShow::MusicShow(QWidget *parent) :
     if(!dir.exists())dir.mkdir(m_songsDir);
     
     m_hintInfo = new QLabel(tr("祝君好心情")); //播放信息
-    m_playInfo = new QLabel(tr("播放信息")); //播放信息
+    m_playInfo = new QLabel(tr("天涯海角")); //播放信息
     m_title = new BlinkBtn("高山流水"); //标题
     m_speedControl = new SpeedControl();//进度标题
     m_timer = new QTimer(); //定时器
@@ -213,9 +213,9 @@ MusicShow::MusicShow(QWidget *parent) :
     pa.setColor(QPalette::WindowText,Qt::red);
     m_hintInfo->setPalette(pa);
     m_hintInfo->setFont(QFont("FZShuTi", 18));
-    pa.setColor(QPalette::WindowText,Qt::blue);
+    pa.setColor(QPalette::WindowText,Qt::darkGray);
     m_playInfo->setPalette(pa);
-    m_playInfo->setFont(QFont("FangSong", 18));
+    m_playInfo->setFont(QFont("FangSong", 16));
 
     //QPalette pal1 = m_loading->palette();
     pa.setColor(QPalette::ButtonText,QColor(220,20,60));
@@ -307,7 +307,6 @@ MusicShow::MusicShow(QWidget *parent) :
     connect(m_player,SIGNAL(mediaStatusChanged(QMediaPlayer::MediaStatus)),this,SLOT(onMediastatus(QMediaPlayer::MediaStatus)) ) ;
     connect(m_player, SIGNAL(error(QMediaPlayer::Error)), this, SLOT(on_err(QMediaPlayer::Error)));
     connect(m_fileList, SIGNAL(currentIndexChanged(int)),this, SLOT(onSingTheSong(int)));
-    
     //右键弹框
     connect(m_actHide, &QAction::triggered, this, &MusicShow::close);
     connect(m_actMute, SIGNAL(triggered(bool)), this, SLOT(onMuted(bool)));
@@ -519,6 +518,7 @@ bool MusicShow::addWeb(QString webAddr)
         m_fileList->addMedia(QUrl(webAddr));
         anotherName.isEmpty()?addSong(webAddr):addSong(anotherName);
         this->setHint(tr("直播源 加载成功!"));
+        saveLiveInfo(webAddr);
         return true;
     }
 
@@ -592,6 +592,33 @@ void MusicShow::sigletonShow(bool isShow)
     m_playMode->setHidden(isShow);
     m_horizontalSlider->setHidden(isShow);
     m_timeUp->setHidden(isShow);
+}
+
+void MusicShow::saveLiveInfo(const QString &data, bool isBatch)
+{
+    QFile file(QCoreApplication::applicationDirPath()+"\\songs\\live.dat");
+    // 打开文件，读写与追加
+    qDebug()<<"正在打开"<<"live.dat";
+    if(file.open(QIODevice::ReadWrite | QIODevice::Append)){
+        QTextStream liveData(&file);
+        liveData.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
+        liveData.setCodec("UTF-8");
+        if(isBatch){
+            QString content = liveData.readAll();
+            if(content.contains(data))return file.close();
+        }else{
+            while (!liveData.atEnd())
+            {
+                QString content = liveData.readLine();      //整行读取
+                if(content.contains(data))return file.close();
+            }
+        }
+
+        // 在stream追加数据，并换行
+        liveData << data << endl;
+    }
+    // 关闭文件, 保存数据
+    file.close();
 }
 
 bool MusicShow::checkSong(const QString &songName)
@@ -728,6 +755,7 @@ void MusicShow::adjustShow()
     if(songUrl.isEmpty()){
         return;
     }
+    m_playing = songUrl;
     bool isLiving = isLive(songUrl);
     m_horizontalSlider->setEnabled(!isLiving);
     m_listView->setCurrentIndex(m_model->index(m_fileList->currentIndex()));
@@ -776,7 +804,6 @@ void MusicShow::onSingTheSong(int index)
     }
     m_fileList->setCurrentIndex(index);
     m_listView->setCurrentIndex(m_model->index(index));
-    m_playing = m_fileList->currentMedia().canonicalUrl();
     if (!m_playing.isValid() || m_playing.isEmpty()) return;
     onPlay();
 }
@@ -1686,6 +1713,10 @@ void MusicShow::onClear()
 // 播放
 void MusicShow::onPlay()
 {
+    int index = m_listView->selectionModel()->currentIndex().row();
+    if( 0<index ){
+        m_fileList->setCurrentIndex(index);
+    }
     adjustShow();
     if(m_player->state() == QMediaPlayer::PlayingState) return;
     if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
@@ -1821,9 +1852,9 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         adjustShow();
         break;
     case QMediaPlayer::LoadedMedia:
-        qDebug()<<600<<"已经停止";
-        m_playInfo->setText("播放信息");
-        onStop();
+        qDebug()<<600<<m_listView->currentIndex().row();
+        //        m_fileList->setCurrentIndex(m_listView->currentIndex().row());
+        m_playInfo->setText("天涯海角");
         break;
     case QMediaPlayer::StalledMedia:
         qDebug()<<700;
@@ -1836,7 +1867,7 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         qDebug()<<900;
         m_listView->selectionModel()->clear();
         m_listView->selectionModel()->select(m_model->index(m_fileList->currentIndex()),QItemSelectionModel::Select);
-        QThread::usleep(100);
+        //        QThread::usleep(100);
     }
         break;
     default:
