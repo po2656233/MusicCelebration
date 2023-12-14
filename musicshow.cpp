@@ -86,7 +86,7 @@ QStringList videoList = QStringList()<<"*.mp4"<<"*.mov"<<"*.mkv"\
                                   <<"*.avi"<<"*.m3u8";
 
 // 直播源
-QStringList liveList = QStringList()<<"*.m3u8"<<"*.m3u"<<"*.php?";
+QStringList liveList = QStringList()<<"*.m3u8"<<"*.m3u"<<"*.php?"<<"http://"<<"https://";
 
 
 #define PADDING 2 //边距
@@ -609,8 +609,8 @@ bool MusicShow::checkSong(const QString &songName)
 // 是否是直播源
 bool MusicShow::isLive(const QString &songName)
 {
-    foreach (QString video, videoList) {
-        if(songName.contains(video.replace("*",""))){
+    foreach (QString live, liveList) {
+        if(songName.contains(live.replace("*",""))){
             return true;
         }
     }
@@ -1164,6 +1164,7 @@ void MusicShow::on_loading_web()
         if(webAddr.left(head.length()) == head){
             webAddr.replace(head,"");
         }
+
         if(QFileInfo(webAddr).isFile()){
             // 从文本中获取
             QFile file(webAddr);
