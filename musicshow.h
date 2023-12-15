@@ -73,18 +73,23 @@ public:
     // 添加歌曲
     void addSong(QString songAddr);
     void addSongList(QStringList songAddrs);
-    bool addWeb(QString webAddr);// 网络加载
-
-    // 正播放的曲目
-    QUrl playing();
-    // 所有曲目
-    QStringList getAllFiles(const QString& dir);
+    bool addWeb(QString webAddr, bool toSave=true);// 网络加载
+    void addWebList(const QString& filePath, bool toSave=true);
 
     // 同步歌词
     void synchronyLrc(const QString &fileName);
 
     // 设置提示信息
     void setHint(QString fileName, bool isRightIn = true,int showtime = 30);
+
+    // 加载记录文件
+    void loadRecord();
+
+    // 正播放的曲目
+    QUrl getPlaying();
+
+    // 所有曲目
+    QStringList getAllFiles(const QString& dir);
 private:
     //  (需检测是否是视频)
     void adjustShow();
@@ -111,15 +116,16 @@ protected:
 
     //bool nativeEvent(const QByteArray& eventType, void *message, long *result);
 private slots:
-    // 文件载入
+    // 加载资源
     void onLoading();
-    void on_loading_dir();
+    // 文件载入
+    void onLoadingDir();
     // 网络加载
-    void on_loading_web();
+    void onLoadingWeb();
 
     // 有无边框切换
-    void on_noBoardStyle();
-    void on_topWindow();
+    void onNoBoardStyle();
+    void onTopWindow();
 
     // 选择歌曲
     // 播放指定歌曲
@@ -148,22 +154,15 @@ private slots:
     void onDuration(qint64 duration);
     // 播放时间
     void onPlayTimer(qint64 value);
-
     // 音量调节
-    void on_lound_sliderMoved(int position);
+    void onLoundSliderMoved(int position);
     // 静音
     void onMuted(bool);
 
-    // 状态变化
-    void onStatus(QMediaPlayer::State status);
-    // 媒体状态
-    void onMediastatus(QMediaPlayer::MediaStatus status);
-
     // 播放模式
-    void on_playModel_clicked();
+    void onPlayModelClicked();
     // 托盘模式
     void OnTrayActivated(QSystemTrayIcon::ActivationReason reason);
-
     // 单口播放
     void onSigletonShow();
     // 显示歌词
@@ -171,32 +170,44 @@ private slots:
     // 文本淡出
     void onOpacity();
 
+    // 状态变化
+    void onStatus(QMediaPlayer::State status);
+    // 媒体状态
+    void onMediastatus(QMediaPlayer::MediaStatus status);
+
     // 关闭定时器
     void onTimeOut();
 
     // 清空列表
     void onContextmenu(const QPoint&);
     void onDeleteItem();
+    void onCopyItem();
     void onClear();
 
     // 异常处理
-    void on_err(QMediaPlayer::Error error);
+    void onErr(QMediaPlayer::Error error);
 
 signals:
     void signalHide();
 
 private:
+    // 文件校验
+    bool isSong(const QString& songName);//文件校验/是否歌曲
+    bool isLive(const QString& songName);//是否直播
+    bool isVideo(const QString& songName);//是否视频
+    void saveLiveInfo(const QString& data,bool isBatch = false);// 保存直播网址信息
+
+
+    // 界面优化
     void region(const QPoint &cursorGlobalPoint);//矩形
     void changeMouseIcon(char ch);//改变鼠标形状
     void sliderStyle(bool isRed);//滑块样式
     void listTurnVedio(bool isVideo);//列表变视频
+    void sigletonShow(bool isShow);
+
+    // 子功能
     void randomPlay();// 随机播放
     void playModel(int choose);//模式选择
-    void sigletonShow(bool isShow);
-    void saveLiveInfo(const QString& data,bool isBatch = false);// 保存直播网址信息
-    bool checkSong(const QString& songName);//文件校验/是否歌曲
-    bool isLive(const QString& songName);//是否直播
-    bool isVideo(const QString& songName);//是否视频
 
     // 界面成员
     //***基本信息
@@ -236,6 +247,7 @@ private:
     QAction*                m_actHide;    // 隐藏
     QAction*                m_actMute;    // 静音
     QAction*                m_actPlay;    // 播放
+    QAction*                m_actCopy;    // 拷贝
     QAction*                m_actLry;     // 显示歌词
     QAction*                m_actDelete;  // 删除
     QAction*                m_actClear;   // 清空
@@ -258,8 +270,10 @@ private:
     QUrl                    m_playing; // 当前播放的文件
     QPoint                  m_dragPosition; //窗口移动拖动时需要记住的点
     QString                 m_songsDir;
+    QString                 m_recordFile;       // 记录文件
     QMap<QString,QString>   m_mapAnotherName;   // 网址别名 加载成功时生效,不要与列表名重复,否则被过滤掉。 如百度|http://www.baidu.com
     QFileInfoList           m_songList;         // 文件列表
+
     //QMap<qint64, QString>   lrc_map;
     //QTimer*                 m_timer;  // 歌词定时器
 };
