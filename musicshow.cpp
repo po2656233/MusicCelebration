@@ -70,9 +70,10 @@
 #include <QtMultimedia/QMediaPlaylist>
 #include <QtMultimediaWidgets/QVideoWidget>
 
-QByteArray encryption(QString plaintextStr);
-QByteArray deciphering(const QByteArray& ciphertext);
-QByteArray getXorEncryptDecrypt(const QString &str, const char &key);
+QString encrypt(const QString &src);
+QString decrypt(const QString &src);
+QString xorEncryptDecrypt(QString src, const QChar key);
+QString toUpperAndLower(QString src);
 static qreal g_rate = 1.0;
 static bool isNoBorder = false;
 static bool isMute = false;
@@ -99,23 +100,55 @@ QStringList liveList = QStringList()<<"*.m3u8"<<"*.m3u"<<"*.php?"<<"http://"<<"h
 #define PADDING 2 //边距
 
 
-QByteArray encryption(QString plaintextStr)
+QString encrypt(const QString &src)
 {
-    return plaintextStr.toLocal8Bit().toBase64();
+    // 大小写加密
+    QByteArray text = src.toLocal8Bit();
+    QByteArray by = text.toBase64();
+    QString str = QString(by);
+    return toUpperAndLower(str);
+
+    // 异或加密
+    //    QByteArray text = src.toLocal8Bit();
+    //    QByteArray by = text.toBase64();
+    //    QString str = QString(by);
+    //    // 异或加密(钥匙加密) --- 注意：（这里的key是可以指定为任意字符的，相应的，解密也要同意字符才行）
+    //    return xorEncryptDecrypt(str, xorkey);
 }
 
-QByteArray deciphering(const QByteArray& ciphertext)
+QString decrypt(const QString &src)
 {
-    return QByteArray::fromBase64(ciphertext);
+    // 大小写解密
+    QString str = toUpperAndLower(src);
+    QByteArray text = str.toLocal8Bit();
+    QByteArray by = text.fromBase64(text);
+    return QString::fromLocal8Bit(by); // 注意：这里是处理中文用的
+    // 异或解密
+    //    QString str = xorEncryptDecrypt(src, xorkey); //异或解密(钥匙解密)
+    //    QByteArray text = str.toLocal8Bit();
+    //    QByteArray by = text.fromBase64(text);
+    //    return QString::fromLocal8Bit(by); // 注意：这里是处理中文用的
 }
-
-QByteArray getXorEncryptDecrypt(const QByteArray &str, const char &key)
+// 加解密都用此方法
+QString toUpperAndLower(QString src)
 {
-    QByteArray bs = str;
-    for(int i=0; i<bs.size(); i++){
-        bs[i] = bs[i] ^ key;
+    for(int i = 0; i < src.count(); i++) {
+        QChar curC = src.at(i);
+        if(curC.isUpper()) {
+            curC = curC.toLower();
+        } else if(curC.isLower()){
+            curC = curC.toUpper();
+        }
+        src[i] = curC;
     }
-    return bs;
+    return src;
+}
+QString xorEncryptDecrypt(QString src, const QChar key)
+{
+    for(int i = 0; i < src.count(); i++) {
+        src[i] = src.at(i).toLatin1() ^ key.toLatin1();
+    }
+    return src;
 }
 
 MusicShow::MusicShow(QWidget *parent) :
@@ -560,20 +593,12 @@ void MusicShow::addWebList(const QString &filePath, bool toSave)
     QFile file(filePath);
     if (file.open(QIODevice::ReadOnly )) {
         QTextStream in;
-        if(toSave){
-            in.setDevice(&file);
-        }else{
-            QString origData = deciphering(getXorEncryptDecrypt(file.readAll(), xorkey));//QString::fromLocal8Bit();
-            qDebug()<<"-->>>"<<origData<<"\n\n ...."<<filePath;
-            in.setString(&origData);
-        }
-//        in.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
-//        in.setCodec("UTF-8");
-
+        in.setDevice(&file);
+        in.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
+        in.setCodec("UTF-8");
         while (!in.atEnd()) {
             // 处理每一行数据
-             qDebug()<<"xxx-->>>"<<in.readLine();
-            addWeb(in.readLine(), toSave);
+            toSave?addWeb(in.readLine(), toSave):addWeb(decrypt(in.readLine()), toSave);
         }
         file.close();
     }
@@ -636,20 +661,20 @@ void MusicShow::saveLiveInfo(const QString &data, bool isBatch)
     qDebug()<<"正在打开"<<"live.dat";
     if(file.open(QIODevice::WriteOnly |QIODevice::Text| QIODevice::Append)){
         QTextStream liveData(&file);
-//        liveData.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
-//        liveData.setCodec("UTF-8");
+        liveData.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
+        liveData.setCodec("UTF-8");
         if(isBatch){
-            QString content = liveData.readAll().toUtf8();
+            QString content = decrypt(liveData.readAll());
             if(content.contains(data))return file.close();
         }else{
             while (!liveData.atEnd())
             {
-                QString content = liveData.readLine().toUtf8();      //整行读取
+                QString content = decrypt(liveData.readLine());      //整行读取
                 if(content.contains(data))return file.close();
             }
         }
         // 加密并换行
-        liveData << getXorEncryptDecrypt(encryption(data), xorkey);
+        liveData << encrypt(data) <<endl;
     }
     // 关闭文件, 保存数据
     file.close();
@@ -1857,9 +1882,6 @@ void MusicShow::onDeleteItem()
     if(m_playing.toString() == songName){
         m_player->stop();
     }
-
-
-
 }
 
 void MusicShow::onCopyItem()
