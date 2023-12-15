@@ -69,8 +69,6 @@
 #include <QtMultimedia/QMediaPlaylist>
 #include <QtMultimediaWidgets/QVideoWidget>
 
-QString byteToQString(const QByteArray &byte);
-QByteArray qstringToByte(const QString &strInfo);
 QString getXorEncryptDecrypt(const QString &, const char &);
 static qreal g_rate = 1.0;
 static bool isNoBorder = false;
@@ -485,9 +483,7 @@ bool MusicShow::addWeb(QString origData, bool toSave)
         m_loading->setHidden(false);
         return false;
     }
-    if(!toSave){
-        origData = getXorEncryptDecrypt(origData, xorkey).toUtf8();
-    }
+
     QString webAddr = origData;
     // 解析地址
     webAddr.replace(",","|");
@@ -542,12 +538,12 @@ void MusicShow::addWebList(const QString &filePath, bool toSave)
     QFile file(filePath);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);
-//        in.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
-//        in.setCodec("UTF-8");
-
+        in.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
+        in.setCodec("UTF-8");
         while (!in.atEnd()) {
             // 处理每一行数据
-            addWeb(in.readLine(),toSave);
+            //            qDebug()<<in.readLine();
+            addWeb(in.readLine(), toSave);
         }
         file.close();
     }
@@ -613,17 +609,19 @@ void MusicShow::saveLiveInfo(const QString &data, bool isBatch)
         liveData.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
         liveData.setCodec("UTF-8");
         if(isBatch){
-            QString content = liveData.readAll();
+            QString content = liveData.readAll().toUtf8();
             if(content.contains(data))return file.close();
         }else{
             while (!liveData.atEnd())
             {
-                QString content = liveData.readLine();      //整行读取
+                QString content = liveData.readLine().toUtf8();      //整行读取
                 if(content.contains(data))return file.close();
             }
         }
         // 在stream追加数据，并换行
-        liveData << getXorEncryptDecrypt(data, xorkey) << endl;
+        //        QString data2 = getXorEncryptDecrypt(data, xorkey);
+        //        qDebug()<<data2;
+        liveData <<  data << endl;
     }
     // 关闭文件, 保存数据
     file.close();
@@ -1919,32 +1917,13 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
 QString getXorEncryptDecrypt(const QString &str, const char &key)
 {
     QString result;
-    QByteArray bs = qstringToByte(str);
+    QByteArray bs = str.toUtf8();
 
     for(int i=0; i<bs.size(); i++){
         bs[i] = bs[i] ^ (key);
     }
 
-    result = byteToQString(bs);
+    result = QString(bs);
     return result;
 }
 
-QString byteToQString(const QByteArray &byte)
-{
-    QString result;
-    if(byte.size() > 0){
-        result = QTextCodec::codecForName("utf-8")->toUnicode(byte);
-    }
-
-    return result;
-}
-
-QByteArray qstringToByte(const QString &strInfo)
-{
-    QByteArray result;
-    if(strInfo.length() > 0){
-        result = QTextCodec::codecForName("utf-8")->fromUnicode(strInfo);
-    }
-
-    return result;
-}
