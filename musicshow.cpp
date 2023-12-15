@@ -62,6 +62,7 @@
 #include <QThread>
 #include <QDirIterator>
 #include <QGraphicsOpacityEffect>
+#include <QCryptographicHash>
 
 #include <QDebug>
 
@@ -69,7 +70,9 @@
 #include <QtMultimedia/QMediaPlaylist>
 #include <QtMultimediaWidgets/QVideoWidget>
 
-QString getXorEncryptDecrypt(const QString &, const char &);
+QByteArray encryption(QString plaintextStr);
+QByteArray deciphering(const QByteArray& ciphertext);
+QByteArray getXorEncryptDecrypt(const QString &str, const char &key);
 static qreal g_rate = 1.0;
 static bool isNoBorder = false;
 static bool isMute = false;
@@ -94,6 +97,26 @@ QStringList liveList = QStringList()<<"*.m3u8"<<"*.m3u"<<"*.php?"<<"http://"<<"h
 
 
 #define PADDING 2 //边距
+
+
+QByteArray encryption(QString plaintextStr)
+{
+    return plaintextStr.toLocal8Bit().toBase64();
+}
+
+QByteArray deciphering(const QByteArray& ciphertext)
+{
+    return QByteArray::fromBase64(ciphertext);
+}
+
+QByteArray getXorEncryptDecrypt(const QByteArray &str, const char &key)
+{
+    QByteArray bs = str;
+    for(int i=0; i<bs.size(); i++){
+        bs[i] = bs[i] ^ key;
+    }
+    return bs;
+}
 
 MusicShow::MusicShow(QWidget *parent) :
     QWidget(parent),m_isTop(false),
@@ -483,7 +506,6 @@ bool MusicShow::addWeb(QString origData, bool toSave)
         m_loading->setHidden(false);
         return false;
     }
-
     QString webAddr = origData;
     // 解析地址
     webAddr.replace(",","|");
@@ -536,13 +558,21 @@ void MusicShow::addWebList(const QString &filePath, bool toSave)
 {
     if(toSave && QFileInfo(filePath).absoluteFilePath() == QFileInfo(m_recordFile).absoluteFilePath())return;
     QFile file(filePath);
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream in(&file);
-        in.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
-        in.setCodec("UTF-8");
+    if (file.open(QIODevice::ReadOnly )) {
+        QTextStream in;
+        if(toSave){
+            in.setDevice(&file);
+        }else{
+            QString origData = deciphering(getXorEncryptDecrypt(file.readAll(), xorkey));//QString::fromLocal8Bit();
+            qDebug()<<"-->>>"<<origData<<"\n\n ...."<<filePath;
+            in.setString(&origData);
+        }
+//        in.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
+//        in.setCodec("UTF-8");
+
         while (!in.atEnd()) {
             // 处理每一行数据
-            //            qDebug()<<in.readLine();
+             qDebug()<<"xxx-->>>"<<in.readLine();
             addWeb(in.readLine(), toSave);
         }
         file.close();
@@ -606,8 +636,8 @@ void MusicShow::saveLiveInfo(const QString &data, bool isBatch)
     qDebug()<<"正在打开"<<"live.dat";
     if(file.open(QIODevice::WriteOnly |QIODevice::Text| QIODevice::Append)){
         QTextStream liveData(&file);
-        liveData.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
-        liveData.setCodec("UTF-8");
+//        liveData.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
+//        liveData.setCodec("UTF-8");
         if(isBatch){
             QString content = liveData.readAll().toUtf8();
             if(content.contains(data))return file.close();
@@ -618,10 +648,8 @@ void MusicShow::saveLiveInfo(const QString &data, bool isBatch)
                 if(content.contains(data))return file.close();
             }
         }
-        // 在stream追加数据，并换行
-        //        QString data2 = getXorEncryptDecrypt(data, xorkey);
-        //        qDebug()<<data2;
-        liveData <<  data << endl;
+        // 加密并换行
+        liveData << getXorEncryptDecrypt(encryption(data), xorkey);
     }
     // 关闭文件, 保存数据
     file.close();
@@ -1912,18 +1940,5 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         break;
     }
 
-}
-
-QString getXorEncryptDecrypt(const QString &str, const char &key)
-{
-    QString result;
-    QByteArray bs = str.toUtf8();
-
-    for(int i=0; i<bs.size(); i++){
-        bs[i] = bs[i] ^ (key);
-    }
-
-    result = QString(bs);
-    return result;
 }
 
