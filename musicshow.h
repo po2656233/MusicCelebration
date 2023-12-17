@@ -90,6 +90,7 @@ public:
 
     // 所有曲目
     QStringList getAllFiles(const QString& dir);
+
 private:
     //  (需检测是否是视频)
     void adjustShow();
@@ -196,7 +197,7 @@ private:
     bool isLive(const QString& songName);//是否直播
     bool isVideo(const QString& songName);//是否视频
     void saveLiveInfo(const QString& data,bool isBatch = false);// 保存直播网址信息
-
+    void saveRecord();
 
     // 界面优化
     void region(const QPoint &cursorGlobalPoint);//矩形
@@ -256,6 +257,7 @@ private:
     QGraphicsOpacityEffect* m_effect;     // 提示效果控制
     // 数据成员
     //***基础信息
+    bool                    m_isFirst:1;
     bool                    m_isTop:1;
     bool                    m_isPlayer:1;
     bool                    m_isLrc:1;

@@ -152,7 +152,7 @@ QString xorEncryptDecrypt(QString src, const QChar key)
 }
 
 MusicShow::MusicShow(QWidget *parent) :
-    QWidget(parent),m_isTop(false),
+    QWidget(parent),m_isFirst(true),m_isTop(false),
     m_isLrc(false),m_isShowLrc(true),
     m_isVideo(false),m_isNext(true),
     m_opaclevel(0.0),m_duration(0),
@@ -375,6 +375,7 @@ MusicShow::MusicShow(QWidget *parent) :
 
 MusicShow::~MusicShow()
 {
+    saveRecord();
     if(m_model)
     {
         delete m_model;
@@ -555,9 +556,11 @@ bool MusicShow::addWeb(QString origData, bool toSave)
         // 播放直播源
         m_fileList->addMedia(QUrl(webAddr));
         anotherName.isEmpty()?addSong(webAddr):addSong(anotherName);
-        this->setHint(tr("直播源 加载成功!"));
         // 是否保存纪录
-        if(toSave)saveLiveInfo(origData);
+        if(toSave){
+            this->setHint(tr("直播源 加载成功!"));
+            saveLiveInfo(origData);
+        }
         return true;
     }
 
@@ -588,7 +591,7 @@ bool MusicShow::addWeb(QString origData, bool toSave)
 
 void MusicShow::addWebList(const QString &filePath, bool toSave)
 {
-    if(toSave && QFileInfo(filePath).absoluteFilePath() == QFileInfo(m_recordFile).absoluteFilePath())return;
+//    if(toSave && QFileInfo(filePath).absoluteFilePath() == QFileInfo(m_recordFile).absoluteFilePath())return;
     QFile file(filePath);
     if (file.open(QIODevice::ReadOnly )) {
         QTextStream in;
@@ -666,25 +669,29 @@ void MusicShow::saveLiveInfo(const QString &data, bool isBatch)
 {
     QFile file(m_recordFile);
     // 打开文件，读写与追加
-    qDebug()<<"正在打开"<<"live.dat";
-    if(file.open(QIODevice::WriteOnly |QIODevice::Text| QIODevice::Append)){
-        QTextStream liveData(&file);
-        liveData.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
-        liveData.setCodec("UTF-8");
+    qDebug()<<"正在打开"<<m_recordFile;
+    if(file.open(QIODevice::ReadWrite|QIODevice::Text| QIODevice::Append)){
+        file.seek(0);
         if(isBatch){
-            QString content = decrypt(liveData.readAll());
+            QString content = decrypt(file.readAll());
+            qDebug()<<content<<"是否1包含"<<data;
             if(content.contains(data))return file.close();
         }else{
-            while (!liveData.atEnd())
-            {
-                QString content = decrypt(liveData.readLine());      //整行读取
-                if(content.contains(data))return file.close();
+            while (!file.atEnd()) {
+                QString content = decrypt(file.readLine());      //整行读取
+                qDebug()<<content<<"是否2包含"<<data;
+                if(content.contains(data)) return file.close();
             }
         }
         // 加密并换行
+        qDebug()<<"正在写入";
+        QTextStream liveData(&file);
+        liveData.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
+        liveData.setCodec("UTF-8");
         liveData << encrypt(data) <<endl;
     }
     // 关闭文件, 保存数据
+    qDebug()<<"关闭文件";
     file.close();
 }
 
@@ -694,7 +701,7 @@ bool MusicShow::isSong(const QString &songName)
 
     foreach (QString audio, audioList) {
         if(songName.contains(audio.replace("*",""))){
-            synchronyLrc(songName);
+            if(!m_isFirst)synchronyLrc(songName);
             return true;
         }
     }
@@ -825,20 +832,69 @@ void MusicShow::setHint(QString hint, bool isRightIn, int showtime)
 void MusicShow::loadRecord()
 {
     // 首次加载记录文件
-    onStop();
-    // 加载网络资源
-    QString webAddr = m_recordFile;
-    QString head = tr("file:///");
-    if(webAddr.left(head.length()) == head){
-        webAddr.replace(head,"");
+    QFile file(m_recordFile);
+    if (file.open(QIODevice::ReadOnly )) {
+        QTextStream in(&file);
+        in.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
+        in.setCodec("UTF-8");
+        QString origData;
+        while (!in.atEnd()) {
+            // 处理每一行数据
+            origData = decrypt( in.readLine());
+            if (origData.isEmpty()){
+                continue;
+            }
+            QString webAddr = origData;
+            // 解析地址
+            webAddr.replace(",","|");
+            QStringList webInfo = webAddr.split("|");
+            QString anotherName = "";
+            if(1<webInfo.length()){
+                anotherName = webInfo[0];
+                webAddr = webInfo[1];
+                m_mapAnotherName[anotherName] = QUrl(webAddr).toString();
+            }
+
+            // 检测是否是视频
+            if(isLive(webAddr) || isVideo(webAddr)){
+                m_fileList->addMedia(QUrl(webAddr));
+            }
+            // 是否是歌曲
+            if(isSong(webAddr)){
+                QFileInfo info(webAddr);
+                m_fileList->addMedia( QUrl(info.absoluteFilePath()));
+                webAddr = info.fileName();
+            }
+            anotherName.isEmpty()?addSong(webAddr):addSong(anotherName);
+        }
+        file.close();
     }
-    qDebug()<<webAddr;
-    if(QFileInfo(webAddr).isFile()){
-        // 从文本中获取
-        qDebug()<<"START";
-        addWebList(webAddr,false);
+    adjustModel();
+    adjustShow();
+    m_isFirst = false;
+}
+
+
+void MusicShow::saveRecord()
+{
+    QString songName;
+    QFile file(m_recordFile);
+    if (file.open(QIODevice::WriteOnly|QIODevice::Text)){
+        QTextStream textStream(&file);
+        textStream.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
+        textStream.setCodec("UTF-8");
+        for (int i = 0;i<m_model->rowCount();i++ ) {
+            songName = m_model->index(i).data().toString();
+            if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty()){
+                songName+=","+m_mapAnotherName[songName];
+            }
+            textStream<<encrypt(songName)<<endl;
+        }
+        file.flush();
+        file.close();
     }
 }
+
 
 void MusicShow::adjustShow()
 {
@@ -883,6 +939,10 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
         int val = m_lound->value();
         m_lound->setValue(val-1);
         event->accept();
+    }else if (event->key() == Qt::Key_P)
+    {
+        onPause();
+        event->accept();
     }
     QWidget::keyPressEvent(event);
 }
@@ -916,14 +976,14 @@ void MusicShow::onSelectitem(const QModelIndex &index)
 {
     if (!index.isValid())return;
     qDebug()<<"onSelectitem：index"<<index.row();
-    QString preUrl = m_playing.toString();
+    QString preSongName = getPlaying();
     QString songName = index.data().toString();
     if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty()){
         songName = m_mapAnotherName[songName];
     }
 
     bool justPlay = false;
-    if(preUrl == songName){
+    if(preSongName == songName){
         if (m_player->state() == QMediaPlayer::PlayingState)return;
         justPlay = m_player->state() == QMediaPlayer::PausedState;
     }
@@ -1805,6 +1865,7 @@ void MusicShow::onClear()
     m_fileList->clear();
     m_model->setStringList(QStringList());
     listTurnVedio(false);
+    QFile::remove(m_recordFile);
 }
 
 // 播放
