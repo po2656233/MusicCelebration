@@ -86,7 +86,7 @@ public:
     void loadRecord();
 
     // 正播放的曲目
-    QUrl getPlaying();
+    QString getPlaying();
 
     // 所有曲目
     QStringList getAllFiles(const QString& dir);

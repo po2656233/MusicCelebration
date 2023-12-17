@@ -172,7 +172,7 @@ MusicShow::MusicShow(QWidget *parent) :
 
     m_playMode = new QPushButton("PLAY MODE"); //播放模式
     m_loading = new QPushButton("START");  //加载
-    m_paused = new QPushButton("PAUSED");   //暂停
+    m_paused = new QPushButton("PAUSE");   //暂停
     m_play = new QPushButton("PLAY");     //播放
     m_stop = new QPushButton("STOP");     //停止
     
@@ -564,7 +564,6 @@ bool MusicShow::addWeb(QString origData, bool toSave)
 
     // 适配地址
     if (webAddr.left(4) != "http")webAddr = "http://"+webAddr;
-    this->setHint(tr("加载中"));
 
     // 获取歌曲
     QString singName = m_networdShow->setUrl(webAddr,m_songsDir);
@@ -606,10 +605,19 @@ void MusicShow::addWebList(const QString &filePath, bool toSave)
 }
 
 
-QUrl MusicShow::getPlaying()
+QString MusicShow::getPlaying()
 {
-    if(!m_playing.isValid())return QUrl();
-    return m_playing;
+    QUrl curUrl =  m_fileList->currentMedia().canonicalUrl();
+    if (!curUrl.isValid() || curUrl.isEmpty()) return "";
+    QString songName = curUrl.toString();
+
+    QMap<QString, QString>::const_iterator i = m_mapAnotherName.constBegin();
+    while (i != m_mapAnotherName.constEnd()) {
+        if(i.value() == songName)return i.key();
+        ++i;
+    }
+
+    return songName;
 }
 
 // 随机播放
@@ -776,14 +784,11 @@ void MusicShow::synchronyLrc(const QString &fileName)
     // 提示信息 展示歌曲
     QFileInfo info(fileName);
     QString songName = info.fileName();
-    QString apostrophe = "";
     int size = songName.length()-4;
     if(0<size - 11){
-        apostrophe = "...";
         size = 8;
     }
-
-    setHint(songName.left(size)+apostrophe,false);
+    setHint(songName.left(size),false);
 
     // 展示歌词
     if (!m_isLrc){
@@ -798,7 +803,16 @@ void MusicShow::setHint(QString hint, bool isRightIn, int showtime)
     m_hintInfo->clear();
     m_effect->setOpacity(1);
     m_effect->update();
-    m_hintInfo->setText(hint.split("", QString::SkipEmptyParts).join("\n"));
+
+    // 控制文本展示数目
+    QString apostrophe = "";
+    int size = hint.length();
+    if(0 < size - 11){
+        apostrophe = "...";
+        size = 8;
+    }
+
+    m_hintInfo->setText(hint.left(size).split("", QString::SkipEmptyParts).join("\n"));
     m_hintInfo->show();
     qDebug()<<"设置提示:"<<hint;
     if(isRightIn){
@@ -881,15 +895,25 @@ void MusicShow::onSingTheSong(int index)
         return;
     }
     m_fileList->setCurrentIndex(index);
-    m_listView->setCurrentIndex(m_model->index(index));
-    if (!m_playing.isValid() || m_playing.isEmpty()) return;
+    QString songName =  getPlaying();
+    if (songName.isEmpty()) {
+        setHint("当前直播源无效");
+        return;
+    }
+    for(int i = 0; i<m_model->rowCount(); i++){
+        if(songName == m_model->index(i).data().toString()){
+            m_listView->setCurrentIndex(m_model->index(i));
+            break;
+        }
+    }
+    m_player->stop();
     onPlay();
+
 }
 
 // 选择列表当中的曲目
 void MusicShow::onSelectitem(const QModelIndex &index)
 {
-
     if (!index.isValid())return;
     qDebug()<<"onSelectitem：index"<<index.row();
     QString preUrl = m_playing.toString();
@@ -1547,6 +1571,7 @@ void MusicShow::onSeek(int seek)
 void MusicShow::onSlowDown()
 {
     if(m_isNext || !m_horizontalSlider->isEnabled()){
+        m_player->stop();
         m_fileList->previous();
         return;
     }
@@ -1579,6 +1604,7 @@ void MusicShow::onRecover()
 void MusicShow::onQuickUp()
 {
     if(m_isNext|| !m_horizontalSlider->isEnabled()){
+        m_player->stop();
         m_fileList->next();
         return;
     }
@@ -1897,14 +1923,8 @@ void MusicShow::onCopyItem()
 
 void MusicShow::onErr(QMediaPlayer::Error error)
 {
-    //    Q_UNUSED(error)
-    QUrl data = m_fileList->currentMedia().canonicalUrl();
-    qDebug()<<"ERROR99"<<error<< data;
-    if (m_fileList->playbackMode() == QMediaPlaylist::CurrentItemOnce)
-    {
-        QString rowdata = m_model->data(m_listView->currentIndex()).toString();
-        setHint(rowdata +" 无效播放源",false);
-    }
+    qDebug()<<"ERROR99"<<error;
+    setHint( "失败 "+getPlaying(),false);
 }
 
 void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
@@ -1934,13 +1954,10 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         break;
     case QMediaPlayer::LoadingMedia:
         sigletonShow(false);//正常窗体
-        qDebug()<<500;
-        //        setHint("正在加载",false);
-        adjustShow();
+        setHint(getPlaying()+" 加载中",false);
         break;
     case QMediaPlayer::LoadedMedia:
         qDebug()<<600<<m_listView->currentIndex().row();
-        //        m_fileList->setCurrentIndex(m_listView->currentIndex().row());
         m_playInfo->setText("天涯海角");
         break;
     case QMediaPlayer::StalledMedia:
@@ -1954,7 +1971,8 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         qDebug()<<900;
         m_listView->selectionModel()->clear();
         m_listView->selectionModel()->select(m_model->index(m_fileList->currentIndex()),QItemSelectionModel::Select);
-        //        QThread::usleep(100);
+        // QThread::usleep(100);
+        adjustShow();
     }
         break;
     default:
