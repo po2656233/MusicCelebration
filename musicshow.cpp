@@ -907,7 +907,7 @@ void MusicShow::adjustShow()
     bool isLiving = isLive(songUrl);
     m_horizontalSlider->setEnabled(!isLiving);
     m_listView->setCurrentIndex(m_model->index(m_fileList->currentIndex()));
-    m_listView->setSelectionRectVisible(true);
+    //    m_listView->setSelectionRectVisible(true);
     listTurnVedio( !isSong(songUrl));
     if(m_isShowLrc && isLiving){
         m_songLrc->hide();
@@ -953,10 +953,7 @@ void MusicShow::onSingTheSong(int index)
     qDebug()<<"onSingTheSong"<<index;
     if(index < 0)return;
 
-    QString preSong = getPlaying();
     m_listView->setCurrentIndex(m_model->index(index));
-    if (preSong == m_listView->currentIndex().data().toString() && m_player->state() == QMediaPlayer::PlayingState)return;
-
     m_hintInfo->hide();
     m_songLrc->stopLrcMask();
     m_songLrc->clear();
@@ -988,8 +985,8 @@ void MusicShow::onPlaySelect()
 {
     m_player->stop();
     QModelIndex index = m_listView->currentIndex();
-    //    qDebug()<<"onPlaySelect "<<index.row();
-    onSingTheSong(index.row());
+    qDebug()<<"onPlaySelect "<<index.row();
+    m_fileList->setCurrentIndex(index.row());
 }
 
 // 播放状态
@@ -1843,10 +1840,29 @@ void MusicShow::onClear()
 // 播放
 void MusicShow::onPlay()
 {
-    m_player->stop();
+    if (m_player->state() == QMediaPlayer::PausedState){
+        m_player->play();
+        adjustShow();
+        return;
+    }
+
+
+
+    //    m_listView->selectionModel()->select(m_model->index(m_fileList->currentIndex())
     int index = m_listView->selectionModel()->currentIndex().row();
-    qDebug()<<"index"<<index;
-    if(index<0)return;
+    qDebug()<<"index"<<m_model->index(index).data().toString();
+    QMediaPlayer::State state = m_player->state();
+    if(index < 0 ){
+        if (state == QMediaPlayer::PlayingState)return;
+        index = 0;
+    }else if (getPlaying() == m_model->index(index).data().toString()){
+        if(state == QMediaPlayer::PausedState || state == QMediaPlayer::StoppedState){
+            m_player->play();
+            adjustShow();
+        }
+        return;
+    }
+    m_player->stop();
     qDebug()<<getPlaying()<<index;
     m_fileList->setCurrentIndex(index);
 }
@@ -2001,7 +2017,7 @@ void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
         // QThread::usleep(100);
         //        adjustShow();
         m_hintInfo->hide();
-        m_listView->selectionModel()->clear();
+        //        m_listView->selectionModel()->clear();
         m_listView->selectionModel()->select(m_model->index(m_fileList->currentIndex()),QItemSelectionModel::Select);
     }
         break;
