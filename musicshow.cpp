@@ -980,7 +980,6 @@ void MusicShow::onSingTheSong(int index)
     if (m_player->isAudioAvailable() || m_player->isVideoAvailable() || m_player->isMetaDataAvailable() || m_player->isAvailable())
     {
         m_player->setMedia(m_fileList->currentMedia());    //避免m_player->play();卡死
-        m_listView->hide();
         m_waiting->show();
     }
 
