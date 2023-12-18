@@ -11,5 +11,6 @@
         <file>img/bg1.jpg</file>
         <file>img/bg3.jpg</file>
         <file>img/bg2.jpg</file>
+        <file>img/waiting.gif</file>
     </qresource>
 </RCC>

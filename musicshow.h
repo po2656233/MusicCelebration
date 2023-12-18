@@ -238,6 +238,7 @@ private:
     VideoView*              m_video;    //视频展示
     MyLyric*                m_songLrc;  //歌词显示
     QStringListModel*       m_model;    //列表信息
+    QLabel*                 m_waiting; // 等待
 
     //***界面优化
     QGridLayout*            m_layout;     // 布局
