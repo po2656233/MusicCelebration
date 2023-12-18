@@ -1427,7 +1427,6 @@ void MusicShow::sliderStyle(bool isRed)
 
 void MusicShow::listTurnVedio(bool isVideo)
 {
-    m_listView->show();
     m_layout->removeWidget(m_listView);
     m_layout->removeWidget(m_video);
     if(isVideo){
@@ -1872,8 +1871,6 @@ void MusicShow::onPlay()
         adjustShow();
         return;
     }
-
-
 
     //    m_listView->selectionModel()->select(m_model->index(m_fileList->currentIndex())
     int index = m_listView->selectionModel()->currentIndex().row();
