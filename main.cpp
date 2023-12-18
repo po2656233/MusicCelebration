@@ -22,6 +22,7 @@
 
 int main(int argc, char *argv[])
 {
+    qputenv("QT_MEDIA_BACKEND", "windows");
     SingleApplication a(argc, argv);
     if (!a.isRunning())
     {

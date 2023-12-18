@@ -71,10 +71,10 @@ public:
     ~MusicShow();
 
     // 添加歌曲
-    void addSong(QString songAddr);
+    void addSong(QString songAddr,bool orderDesc=true);
     void addSongList(QStringList songAddrs);
-    bool addWeb(QString webAddr, bool toSave=true);// 网络加载
-    void addWebList(const QString& filePath, bool toSave=true);
+    bool addWeb(QString webAddr,bool orderDesc=true);// 网络加载
+    void addWebList(const QString& filePath);
 
     // 同步歌词
     void synchronyLrc(const QString &fileName);
