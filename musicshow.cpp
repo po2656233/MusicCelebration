@@ -559,6 +559,7 @@ bool MusicShow::addWeb(QString origData, bool orderDesc)
     }
     QString webAddr = origData;
     // 解析地址
+    webAddr.replace(" ","|");
     webAddr.replace(",","|");
     QStringList webInfo = webAddr.split("|");
     QString anotherName = "";
@@ -852,6 +853,7 @@ void MusicShow::loadRecord()
             }
             QString webAddr = origData;
             // 解析地址
+            webAddr.replace(" ","|");
             webAddr.replace(",","|");
             QStringList webInfo = webAddr.split("|");
             QString anotherName = "";
@@ -868,7 +870,7 @@ void MusicShow::loadRecord()
             // 是否是歌曲
             if(isSong(webAddr)){
                 QFileInfo info(webAddr);
-                m_fileList->addMedia( QUrl::fromLocalFile(info.absoluteFilePath()));
+                m_fileList->addMedia( QUrl(info.absoluteFilePath()));
                 webAddr = info.fileName();
             }
             anotherName.isEmpty()?addSong(webAddr,false):addSong(anotherName,false);
@@ -1988,6 +1990,7 @@ void MusicShow::onErr(QMediaPlayer::Error error)
 {
     qDebug()<<"ERROR99"<<error;
     setHint( "失败 "+getPlaying(),false);
+    QThread::usleep(100);
 }
 
 void MusicShow::onMediastatus(QMediaPlayer::MediaStatus status)
