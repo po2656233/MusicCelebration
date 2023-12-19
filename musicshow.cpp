@@ -607,8 +607,7 @@ void MusicShow::addWebList(const QString &filePath)
     //    if(toSave && QFileInfo(filePath).absoluteFilePath() == QFileInfo(m_recordFile).absoluteFilePath())return;
     QFile file(filePath);
     if (file.open(QIODevice::ReadOnly )) {
-        QTextStream in;
-        in.setDevice(&file);
+        QTextStream in(&file);
         in.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
         in.setCodec("UTF-8");
         while (!in.atEnd()) {
