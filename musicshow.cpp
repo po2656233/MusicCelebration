@@ -206,7 +206,7 @@ MusicShow::MusicShow(QWidget *parent) :
     m_hintInfo->setWordWrap(true);
     m_hintInfo->setAlignment(Qt::AlignTop|Qt::AlignCenter);
     QString word = m_hintInfo->text();
-    m_hintInfo->setText(word.split("", QString::SkipEmptyParts).join("\n"));
+    m_hintInfo->setText(word.split("").join("\n"));
 
     // 设置字体颜色
     QPalette pa;
@@ -556,22 +556,22 @@ QUrl MusicShow::playing()
 void MusicShow::randomPlay()
 {
     // 不重复随机数
-    static QTime static_t = QTime::currentTime();
-    QTime time = QTime::currentTime();
-    int sec = static_t.msecsTo(time);
-    qsrand(sec);
-    int math = qrand()% m_songList.size();
+    // static QTime static_t = QTime::currentTime();
+    // QTime time = QTime::currentTime();
+    // int sec = static_t.msecsTo(time);
+    // qsrand(sec);
+    // int math = qrand()% m_songList.size();
     
-    QString fileName = m_songList.at(math).fileName();
-    //playSong(fileName);
-    for (int i = 0; i < m_model->rowCount(); i++)
-    {
-        if (fileName == m_model->index(i).data().toString())
-        {
-            m_listView->setCurrentIndex(m_model->index(i));
-        }
-    }
-    m_listView->setSelectionRectVisible(true);
+    // QString fileName = m_songList.at(math).fileName();
+    // //playSong(fileName);
+    // for (int i = 0; i < m_model->rowCount(); i++)
+    // {
+    //     if (fileName == m_model->index(i).data().toString())
+    //     {
+    //         m_listView->setCurrentIndex(m_model->index(i));
+    //     }
+    // }
+    // m_listView->setSelectionRectVisible(true);
 }
 
 void MusicShow::playModel(int choose)

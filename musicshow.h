@@ -61,7 +61,9 @@ enum Direction
     RIGHTTOP,
     NONE
 };
-
+namespace mdk {
+class Player;
+}
 class MusicShow : public QWidget
 {
     Q_OBJECT
