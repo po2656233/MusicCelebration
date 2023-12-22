@@ -6,9 +6,10 @@
 
 #QT += core gui webenginewidgets
 
-QT += core gui multimedia multimediawidgets
+QT += core gui network
 QT -= qml quick
 CONFIG += c++11
+CONFIG -= app_bundle
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = MusicCelebration
@@ -24,13 +25,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+######## MDK SDK ##########
+MDK_SDK = $$PWD/qmdk/mdk-sdk
+include($$MDK_SDK/mdk.pri)
 
+CONFIG(debug, debug|release) {
+    LIBS += -L$$OUT_PWD/qmdk/debug
+} else {
+    LIBS += -L$$OUT_PWD/qmdk/release
+}
+android: LIB_SUFFIX=_$$ANDROID_TARGET_ARCH
+LIBS += -L$$OUT_PWD/qmdk -lqtmdk$$LIB_SUFFIX
 
 SOURCES += main.cpp\
     lineeditmx.cpp \
         musicshow.cpp \
     singleapplication.cpp \
-    videoview.cpp \
     dialogmx.cpp \
     buttonmx.cpp \
     blinkbtn.cpp \
@@ -43,7 +53,6 @@ HEADERS  += musicshow.h \
     lineeditmx.h \
     singleapplication.h \
     widgetObjName.h \
-    videoview.h \
     dialogmx.h \
     buttonmx.h \
     blinkbtn.h \

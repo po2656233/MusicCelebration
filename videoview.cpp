@@ -29,8 +29,10 @@ void VideoView::setVideo(QWidget *movies)
 {
     if (!movies) return;
     m_movice = qobject_cast<VideoWidget*>(movies);
-    m_layout->addWidget(m_movice);
-    m_movice->setHidden(true);
+    if(m_movice){
+        m_layout->insertWidget(0,m_movice);
+        // m_movice->setHidden(true);
+    }
 }
 
 void VideoView::waitingFor(int sec)

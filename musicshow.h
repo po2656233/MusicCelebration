@@ -17,10 +17,11 @@
 #define MUSICSHOW_H
 
 #include <QWidget>
-#include <QMediaPlayer>
+// #include <QMediaPlayer>
 #include <QFileInfoList>
 #include <QModelIndexList>
 #include <QSystemTrayIcon>
+
 
 QT_BEGIN_NAMESPACE
 class QPushButton;
@@ -48,6 +49,9 @@ class BlinkBtn;
 class VideoWidget;
 class SpeedControl;
 class MyLyric;
+class QMDKPlayer;
+class QMDKWidgetRenderer;
+
 
 enum Direction
 {
@@ -60,6 +64,17 @@ enum Direction
     RIGHTBOTTOM,
     RIGHTTOP,
     NONE
+};
+
+
+enum PlayerModule
+{
+    UNKNOW = 0,
+    Once = 1,
+    InLoop = 2,
+    Sequential = 3,
+    Loop = 4,
+    Random = 5
 };
 
 class MusicShow : public QWidget
@@ -87,6 +102,7 @@ public:
 
     // 正播放的曲目
     QString getPlaying();
+    int  getCurrentIndex()const;
 
     // 所有曲目
     QStringList getAllFiles(const QString& dir);
@@ -94,8 +110,6 @@ public:
 private:
     //  (需检测是否是视频)
     void adjustShow();
-    //  model与媒体资源同步
-    void adjustModel();
 
 protected:
     // 键盘事件——控制状态
@@ -171,12 +185,12 @@ private slots:
     // 文本淡出
     void onOpacity();
 
-    // 状态变化
-    void onStatus(QMediaPlayer::State status);
-    // 媒体状态
-    void onMediastatus(QMediaPlayer::MediaStatus status);
+    // // 状态变化
+    // void onStatus(QMediaPlayer::State status);
+    // // 媒体状态
+    // void onMediastatus(QMediaPlayer::MediaStatus status);
 
-    // 关闭定时器
+    // 进度条
     void onTimeOut();
 
     // 清空列表
@@ -186,7 +200,7 @@ private slots:
     void onClear();
 
     // 异常处理
-    void onErr(QMediaPlayer::Error error);
+    // void onErr(QMediaPlayer::Error error);
 
 signals:
     void signalHide();
@@ -209,6 +223,8 @@ private:
     // 子功能
     void randomPlay();// 随机播放
     void playModel(int choose);//模式选择
+    void clearMedia();
+
 
     // 界面成员
     //***基本信息
@@ -218,6 +234,8 @@ private:
     BlinkBtn*               m_title;        //标题
     SpeedControl*           m_speedControl; //播放速度控制
     QTimer*                 m_timer;        //定时器
+    QTimer*                 m_timerSlider;  //同步进度条定时器
+
     //***曲目状态
     QDial*                  m_lound;    //声音
     QLCDNumber*             m_timeUp;   //时间
@@ -232,13 +250,12 @@ private:
 
     //***播放资源
     QListView*              m_listView; //播放列表
-    VideoWidget*            m_view;     //视频播放
-    QMediaPlayer*           m_player;   //媒体播放
-    QMediaPlaylist*         m_fileList; //播放资源
-    VideoView*              m_video;    //视频展示
+    // VideoView*              m_videoView;//视频播放
     MyLyric*                m_songLrc;  //歌词显示
     QStringListModel*       m_model;    //列表信息
     QLabel*                 m_waiting; // 等待
+    QMDKWidgetRenderer*     m_render;   // 当前播放渲染
+    QMDKPlayer*             m_player;
 
     //***界面优化
     QGridLayout*            m_layout;     // 布局
@@ -269,13 +286,15 @@ private:
 
 
 
-    qint64                  m_duration;// 时间周期
-    QUrl                    m_playing; // 当前播放的文件
-    QPoint                  m_dragPosition; //窗口移动拖动时需要记住的点
-    QString                 m_songsDir;
+    qint64                  m_duration;         // 时间周期
+    QString                 m_playing;          // 当前播放的文件
+    QPoint                  m_dragPosition;     // 窗口移动拖动时需要记住的点
+    QString                 m_songsDir;         // 导入的音视频目录
     QString                 m_recordFile;       // 记录文件
-    QMap<QString,QString>   m_mapAnotherName;   // 网址别名 加载成功时生效,不要与列表名重复,否则被过滤掉。 如百度|http://www.baidu.com
     QFileInfoList           m_songList;         // 文件列表
+    PlayerModule            m_enModule;
+    QMap<QString,QString>       m_mapAnotherName;   // 网址别名 加载成功时生效,不要与列表名重复,否则被过滤掉。 如百度|http://www.baidu.com
+
 
     //QMap<qint64, QString>   lrc_map;
     //QTimer*                 m_timer;  // 歌词定时器
