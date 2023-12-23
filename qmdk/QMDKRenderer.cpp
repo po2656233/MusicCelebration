@@ -149,6 +149,29 @@ void QMDKWidgetRenderer::initializeGL()
     });
 }
 
+// void QMDKWidgetRenderer::snapshot() {
+    // Player::SnapshotRequest sr{};
+    // player_->snapshot(&sr, [](Player::SnapshotRequest *_sr, double frameTime) {
+    //     const QString path = QDir::toNativeSeparators(
+    //         QString("%1/%2.png")
+    //             .arg(QCoreApplication::applicationDirPath())
+    //             .arg(frameTime));
+    //     return path.toStdString();
+        // Here's how to convert SnapshotRequest to QImage and save it to disk.
+        /*if (_sr) {
+            const QImage img = QImage(_sr->data, _sr->width, _sr->height,
+                                      QImage::Format_RGBA8888);
+            if (img.save(path)) {
+                qDebug() << "Snapshot saved:" << path;
+            } else {
+                qDebug() << "Failed to save:" << path;
+            }
+        } else {
+            qDebug() << "Snapshot failed.";
+        }
+        return "";*/
+    // });
+// }
 void QMDKWidgetRenderer::resizeGL(int w, int h)
 {
     if (!player_) // TODO: not safe. lock? but if player qobject is destroying, player dtor is finished. use true shared_ptr?

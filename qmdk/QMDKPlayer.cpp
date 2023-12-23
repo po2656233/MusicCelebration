@@ -8,7 +8,11 @@
 #include <QtDebug>
 #include <QRegion>
 #include <QVariant>
+// #include<QImage>
+
 #include "mdk/Player.h"
+
+
 
 using namespace MDK_NS;
 QMDKPlayer::QMDKPlayer(QObject *parent)
@@ -37,10 +41,36 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
         QCoreApplication::instance()->postEvent(vo, new QUpdateLaterEvent(QRegion(0, 0, vo->property("width").toInt(), vo->property("height").toInt())));
 #endif
     });
+    player_->setVideoDecoders({"VT", "VAAPI", "MFT:d3d=11", "DXVA", "MMAL", "AMediaCodec:java=1:copy=0:surface=1:async=0", "FFmpeg"});
+
+    qRegisterMetaType<mdk::State>("mdk::State");
+    qRegisterMetaType<mdk::MediaStatus>("mdk::MediaStatus");
+    //播放状态变化
+    player_->onStateChanged([this](mdk::State state) {
+        // qDebug()<<"state"<<int(state);
+        emit this->signalStateChanged(state);
+    });
+
+    //媒体状态变化
+    player_->onMediaStatus([this](mdk::MediaStatus oldValue, mdk::MediaStatus newValue) {
+        qDebug()<<"oldValue"<<int(oldValue)<<newValue;
+        emit this->signalMediaStatusChanged(newValue);
+        return false;
+    });
+
+
+    //各种事件触发
+    // player_->onEvent([this](const mdk::MediaEvent & e) {
+    //     emit signalEventChanged(e);
+    //     return true;
+    // });
+
+    //获取状态
+    //  MediaStatus a=player_->mediaStatus();
+
 }
 
-QMDKPlayer::~QMDKPlayer() = default;
-
+QMDKPlayer::~QMDKPlayer()=default;
 void QMDKPlayer::setDecoders(const QStringList &dec)
 {
     std::vector<std::string> v;
@@ -54,10 +84,23 @@ void QMDKPlayer::setMedia(const QString &url)
 {
     player_->setMedia(url.toUtf8().constData());
     player_->waitFor(mdk::State::Stopped);
-    player_->prepare(0, [this](int64_t, bool *) {
-        QMetaObject::invokeMethod(parent(), "readMediaInfo");
-        return true;
-    });
+    player_->prepare(0);
+    // player_->prepare(0, [this](int64_t  v, bool *isOk) {
+    //     QMetaObject::invokeMethod(parent(), "readMediaInfo");
+    //     qDebug()<<"setMedia"<<v<<*isOk;
+    //     // if(v == -1){
+    //     //     emit signalMediaStatusChanged(Invalid);
+    //     // }
+    //     return true;
+    // });
+}
+void QMDKPlayer::setFilter(const QString &filter)
+{
+    player_->setProperty("video.avfilter", filter.toStdString());
+}
+void QMDKPlayer::setProperty(const std::string &key, const std::string &value)
+{
+    player_->setProperty(key, value);
 }
 
 void QMDKPlayer::setVolume(float val)
@@ -103,6 +146,10 @@ bool QMDKPlayer::isPlaying() const
 {
     return player_->state() == State::Playing;
 }
+bool QMDKPlayer::isStopped() const
+{
+    return player_->state() == State::Stopped;
+}
 
 void QMDKPlayer::seek(qint64 ms)
 {
@@ -116,14 +163,38 @@ qint64 QMDKPlayer::position() const
 
 qint64 QMDKPlayer::duration() const
 {
-    return player_->mediaInfo().duration;
+    mdk::MediaInfo mediaInfo = player_->mediaInfo();
+
+    std::vector<mdk::AudioStreamInfo> audioTrackInfo = mediaInfo.audio;
+    foreach (mdk::AudioStreamInfo info, audioTrackInfo) {
+        return info.duration;
+    }
+
+    std::vector<mdk::VideoStreamInfo> videoTrackInfo = mediaInfo.video;
+    foreach (mdk::VideoStreamInfo info, videoTrackInfo) {
+       return info.duration;
+    }
+    return mediaInfo.duration;
 }
 
 qint64 QMDKPlayer::startTime() const
 {
-    return player_->mediaInfo().start_time;
-}
+    mdk::MediaInfo mediaInfo = player_->mediaInfo();
 
+    std::vector<mdk::AudioStreamInfo> audioTrackInfo = mediaInfo.audio;
+    foreach (mdk::AudioStreamInfo info, audioTrackInfo) {
+        qDebug()<<"start_time1 "<<info.start_time;
+        return info.start_time;
+    }
+
+    std::vector<mdk::VideoStreamInfo> videoTrackInfo = mediaInfo.video;
+    foreach (mdk::VideoStreamInfo info, videoTrackInfo) {
+         qDebug()<<"start_time2 "<<info.start_time;
+        return info.start_time;
+    }
+     qDebug()<<"start_time3 "<<mediaInfo.start_time;
+    return mediaInfo.start_time;
+}
 
 void QMDKPlayer::addRenderer(QObject* vo, int w, int h)
 {
@@ -157,4 +228,154 @@ void QMDKPlayer::setROI(QObject* vo, const float* videoRoi, const float* viewpor
 QString QMDKPlayer::currentMedia() const
 {
     return player_.get()->url();
+}
+void QMDKPlayer::setLoop(int count)
+{
+    player_->setLoop(count);
+}
+
+void QMDKPlayer::rotate(int degree, QObject *render)
+{
+    player_->rotate(degree, render);
+}
+
+void QMDKPlayer::setAspect(float value, QObject *render)
+{
+    player_->setAspectRatio(value, render);
+}
+
+void QMDKPlayer::setBackgroundColor(float r, float g, float b, float a, QObject *render)
+{
+    player_->setBackgroundColor(r, g, b, a, render);
+}
+
+QSize QMDKPlayer::getSize(int stream)
+{
+    QSize size;
+    std::vector<mdk::VideoStreamInfo> video = player_->mediaInfo().video;
+    if (video.size() > stream) {
+        mdk::VideoCodecParameters para = video.at(stream).codec;
+        size = QSize(para.width, para.height);
+    }
+
+    return size;
+}
+
+float QMDKPlayer::playbackRate()
+{
+    return player_->playbackRate();
+}
+void QMDKPlayer::record(const QString &fileName, const QString &format)
+{
+    player_->record(fileName.toUtf8().constData(), format.toUtf8().constData());
+}
+// void QMDKPlayer::snapshot(int rotate, QObject *render)
+// {
+//     mdk::Player::SnapshotRequest sr{};
+//     player_->snapshot(&sr, [this, rotate](mdk::Player::SnapshotRequest * sr2, double) {
+//             QImage image = QImage(sr2->data, sr2->width, sr2->height, Format_RGB);
+//             //如果有旋转角度先要旋转
+//             VideoHelper::rotateImage(rotate, image);
+//             emit imageCaptured(image.copy());
+//             return std::string();
+//         }, render);
+// }
+void QMDKPlayer::readMetaData()
+{
+    //标题/艺术家/专辑/专辑封面
+    QString title, artist, album;
+    mdk::MediaInfo mediaInfo = player_->mediaInfo();
+    std::unordered_map<std::string, std::string> metadata = mediaInfo.metadata;
+    for (auto i = metadata.begin(); i != metadata.end(); i++) {
+        QString key = QString::fromStdString(i->first);
+        QString value = QString::fromStdString(i->second);
+        if (key == "title") {
+            title = value;
+        } else if (key == "artist") {
+            artist = value;
+        } else if (key == "album") {
+            album = value;
+        }
+    }
+
+    QString format = mediaInfo.format;
+    emit signalReceiveMetaData(format, title, artist, album);
+}
+
+// void QMDKPlayer::readAudioInfo(int index)
+// {
+//     std::vector<mdk::AudioStreamInfo> audios = player_->mediaInfo().audio;
+//     if (index >= 0 && audios.size() > index) {
+//         mdk::AudioStreamInfo audio = audios.at(index);
+//         mdk::AudioCodecParameters para = audio.codec;
+//         emit receiveAudioInfo(audio.index, para.sample_rate, para.channels, para.profile, para.bit_rate, para.codec);
+//     }
+// }
+
+// void QMDKPlayer::readVideoInfo(int index)
+// {
+//     std::vector<mdk::VideoStreamInfo> videos = player_->mediaInfo().video;
+//     if (index >= 0 && videos.size() > index) {
+//         mdk::VideoStreamInfo video = videos.at(index);
+//         mdk::VideoCodecParameters para = video.codec;
+//         //取出封面
+//         QImage image;
+//         if (video.image_size > 0) {
+//             image = QImage::fromData(video.image_data, video.image_size);
+//         }
+//         emit receiveVideoInfo(video.index, para.width, para.height, para.frame_rate, video.rotation, para.codec, image);
+//     }
+// }
+
+void QMDKPlayer::readTrackInfo(QList<int> &audioTracks, QList<int> &videoTracks)
+{
+    mdk::MediaInfo mediaInfo = player_->mediaInfo();
+
+    audioTracks.clear();
+    std::vector<mdk::AudioStreamInfo> audioTrackInfo = mediaInfo.audio;
+    foreach (mdk::AudioStreamInfo info, audioTrackInfo) {
+        audioTracks << info.index;
+    }
+
+    videoTracks.clear();
+    std::vector<mdk::VideoStreamInfo> videoTrackInfo = mediaInfo.video;
+    foreach (mdk::VideoStreamInfo info, videoTrackInfo) {
+        videoTracks << info.index;
+    }
+
+    //可能获取到的索引是 音频(3, 4, 5) / 视频(0, 1, 2)
+    //底层设置节目流按照 0/1/2 这样排列/所以需要强制矫正
+    int count = videoTracks.count();
+    audioTracks.clear();
+    videoTracks.clear();
+    for (int i = 0; i < count; ++i) {
+        audioTracks << i;
+        videoTracks << i;
+    }
+}
+
+void QMDKPlayer::setAudioTrack(int track)
+{
+    std::set<int> tracks;
+    tracks.insert(track);
+    player_->setActiveTracks(mdk::MediaType::Audio, tracks);
+}
+
+void QMDKPlayer::setVideoTrack(int track)
+{
+    std::set<int> tracks;
+    tracks.insert(track);
+    player_->setActiveTracks(mdk::MediaType::Video, tracks);
+}
+
+
+void QMDKPlayer::setVideoSurfaceSize(int width, int height, QObject *render)
+{
+    player_->setVideoSurfaceSize(width, height, render);
+    connect(render, SIGNAL(destroyed(QObject *)), this, SLOT(clear(QObject *)), Qt::ConnectionType(Qt::DirectConnection | Qt::UniqueConnection));
+}
+
+void QMDKPlayer::clear(QObject *render)
+{
+    player_->setVideoSurfaceSize(-1, -1, render);
 }

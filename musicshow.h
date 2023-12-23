@@ -16,6 +16,7 @@
 #ifndef MUSICSHOW_H
 #define MUSICSHOW_H
 
+#include "mdk/Player.h"
 #include <QWidget>
 // #include <QMediaPlayer>
 #include <QFileInfoList>
@@ -80,7 +81,6 @@ enum PlayerModule
 class MusicShow : public QWidget
 {
     Q_OBJECT
-
 public:
     explicit MusicShow(QWidget *parent = 0);
     ~MusicShow();
@@ -109,7 +109,7 @@ public:
 
 private:
     //  (需检测是否是视频)
-    void adjustShow();
+    bool adjustShow();
 
 protected:
     // 键盘事件——控制状态
@@ -186,9 +186,9 @@ private slots:
     void onOpacity();
 
     // // 状态变化
-    // void onStatus(QMediaPlayer::State status);
+    void onStatus(mdk::State status);
     // // 媒体状态
-    // void onMediastatus(QMediaPlayer::MediaStatus status);
+    void onMediastatus(mdk::MediaStatus status);
 
     // 进度条
     void onTimeOut();
@@ -221,9 +221,8 @@ private:
     void sigletonShow(bool isShow);
 
     // 子功能
-    void randomPlay();// 随机播放
-    void playModel(int choose);//模式选择
-    void clearMedia();
+    void previous(); // 上一首
+    void next();//下一首
 
 
     // 界面成员
@@ -285,14 +284,16 @@ private:
     float                   m_opaclevel;
 
 
-
+    int                     m_preIndex;         // 上一首在记录中的索引位置
     qint64                  m_duration;         // 时间周期
     QString                 m_playing;          // 当前播放的文件
     QPoint                  m_dragPosition;     // 窗口移动拖动时需要记住的点
     QString                 m_songsDir;         // 导入的音视频目录
     QString                 m_recordFile;       // 记录文件
     QFileInfoList           m_songList;         // 文件列表
-    PlayerModule            m_enModule;
+    PlayerModule            m_enModule;         // 播放模式
+
+    QList<int>              m_preIndexs;        // 记录点播的索引
     QMap<QString,QString>       m_mapAnotherName;   // 网址别名 加载成功时生效,不要与列表名重复,否则被过滤掉。 如百度|http://www.baidu.com
 
 
