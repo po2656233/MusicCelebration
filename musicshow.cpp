@@ -61,7 +61,7 @@
 
 // #include <QNetworkAccessManager>
 // #include <QNetworkReply>
-#include <QThread>
+
 #include <QDirIterator>
 #include <QGraphicsOpacityEffect>
 #include <QCryptographicHash>
@@ -103,6 +103,11 @@ QStringList liveList = QStringList()<<"*.m3u8"<<"*.m3u"<<"*.php?"<<"http://"<<"h
 
 #define PADDING 2 //边距
 
+// 数值比较 不变
+bool lessThan(int a,int b)
+{
+    return a==b;
+}
 
 QString encrypt(const QString &src)
 {
@@ -159,7 +164,7 @@ MusicShow::MusicShow(QWidget *parent) :
     QWidget(parent),m_isFirst(true),m_isTop(false),
     m_isLrc(false),m_isShowLrc(true),
     m_isVideo(false),m_isNext(true),
-    m_opaclevel(0.0),m_duration(0),
+    m_opaclevel(0.0),m_preIndex(-1),m_duration(0),
     m_dragPosition(QPoint(0,0)){
 
     // 保存歌曲的目录
@@ -187,7 +192,7 @@ MusicShow::MusicShow(QWidget *parent) :
     // m_videoView = new VideoView();    // 视频画面
     m_songLrc = new MyLyric(this);    // 歌词显示
     m_render = new QMDKWidgetRenderer();
-    m_player = new QMDKPlayer();
+    m_player = nullptr;
 
 
     m_lound = new QDial();            // 声音
@@ -311,9 +316,9 @@ MusicShow::MusicShow(QWidget *parent) :
     // m_videoView->setHidden(true);
     // m_video->setVideo(m_mdkView);
     // m_video->setHidden(true);
-    m_render->setSource(m_player);
-    m_player->setDecoders(QStringList()<<"MFT:d3d=11"<<"CUDA"<<"hap"<<"D3D11"<<"DXVA");
-    m_render->hide();
+    // m_render->setSource(m_player);
+    // m_player->setDecoders(QStringList()<<"MFT:d3d=11"<<"CUDA"<<"hap"<<"D3D11"<<"DXVA");
+    // m_render->hide();
 
     //    m_view->setPlayer(m_player);
 
@@ -331,7 +336,6 @@ MusicShow::MusicShow(QWidget *parent) :
     m_listView->installEventFilter(this);
     m_listView->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    m_preIndex = -1;
     m_preIndexs.clear();
 
     // 关联信号和槽
@@ -637,12 +641,28 @@ QString MusicShow::getPlaying()
 
 void MusicShow::previous()
 {
-    if(m_player)m_player->stop();
-    m_preIndexs = m_preIndexs.toSet().toList() ;
-    if(m_preIndexs.size() < m_preIndex)m_preIndex = m_preIndexs.size();
-    m_preIndex--;
-    if(m_preIndex < 0)m_preIndex = 0;
-    if(m_preIndex < m_preIndexs.size())onSingTheSong(m_preIndexs.at(m_preIndex));
+    // 移除重复
+    QList<int> tempIndexs;
+    for (int i = 0; i < m_preIndexs.size(); ++i) {
+        if (!tempIndexs.contains(m_preIndexs[i])){
+            tempIndexs<<m_preIndexs[i];
+        }
+    }
+    if(-1 == m_preIndex){
+        m_preIndex = tempIndexs.size()-2;
+    }else{
+        m_preIndex--;
+    }
+    if(m_preIndex < 0){
+        m_preIndex = 0;
+    }
+    int beforIndex = -1;
+    if( m_preIndex < tempIndexs.size()){
+        beforIndex = tempIndexs[m_preIndex];
+    }
+
+    qDebug()<<"previous2 "<<beforIndex;
+    onSingTheSong(beforIndex);
 }
 
 void MusicShow::next()
@@ -656,6 +676,7 @@ void MusicShow::next()
         break;
     case Sequential:
     {
+        m_preIndex = -1;
         int index = getCurrentIndex();
         if(m_model->rowCount()<=index+1)return;
         onSingTheSong(++index);
@@ -663,6 +684,7 @@ void MusicShow::next()
     break;
     case Loop:
     {
+        m_preIndex = -1;
         int index = getCurrentIndex();
         index = (m_model->rowCount()<=index+1)?0:index+1;
         onSingTheSong(index);
@@ -670,6 +692,7 @@ void MusicShow::next()
     break;
     case Random:
     {
+        m_preIndex = -1;
         static QTime static_t = QTime::currentTime();
         QTime time = QTime::currentTime();
         int sec = static_t.msecsTo(time);
@@ -678,9 +701,7 @@ void MusicShow::next()
         int curIndex = getCurrentIndex();
         if(index == curIndex){
             index++;
-            if(m_model->rowCount()<=index ){
-                index = 0;
-            }
+            if(m_model->rowCount()<=index )index = 0;
             if(curIndex == index)index = 1;
         }
         onSingTheSong(index);
@@ -693,11 +714,13 @@ void MusicShow::next()
 }
 
 
-int MusicShow::getCurrentIndex() const
+int MusicShow::getCurrentIndex()
 {
-    if(!m_playing.isEmpty()){
+    QString songName = getPlaying();
+    if(!songName.isNull() && !songName.isEmpty()){
         for (int i = 0; i < m_model->rowCount(); i++) {
-            if(m_playing == m_model->index(i).data().toString()){
+            if(songName == m_model->index(i).data().toString()){
+                qDebug()<<"当前索引 --->"<<i;
                 return i;
             }
         }
@@ -914,7 +937,6 @@ void MusicShow::loadRecord()
         }
         file.close();
     }
-    adjustShow();
     m_isFirst = false;
 }
 
@@ -943,33 +965,39 @@ void MusicShow::saveRecord()
 bool MusicShow::adjustShow()
 {
     QModelIndex indexData = m_listView->currentIndex();
+    if(!indexData.isValid() || !indexData.data().isValid())return false;
     QString songName = indexData.data().toString();
     if(songName.isNull() || songName.isEmpty())return false;
 
     int index = indexData.row();
     qDebug()<<"当前播放的"<<songName <<" 索引:"<<index;
-    if(!m_mapAnotherName[songName].isEmpty()){
+    if(!m_mapAnotherName[songName].isNull()&& !m_mapAnotherName[songName].isEmpty()){
         songName = m_mapAnotherName[songName];
     }
     bool issong = isSong(songName);
     if(m_player == nullptr || 0 != songName.compare(m_player->currentMedia())){
         if(m_player){
-            disconnect(m_player, SIGNAL(signalMediaStatusChanged(mdk::MediaStatus)), this, SLOT(onMediastatus(mdk::MediaStatus)));
-            disconnect(m_player, SIGNAL(signalStateChanged(mdk::State)), this, SLOT(onStatus(mdk::State)));
-            m_player->deleteLater();
+            m_player->stop();
+            // disconnect(m_player, SIGNAL(signalMediaStatusChanged(mdk::MediaStatus)), this, SLOT(onMediastatus(mdk::MediaStatus)));
+            // disconnect(m_player, SIGNAL(signalStateChanged(mdk::State)), this, SLOT(onStatus(mdk::State)));
+            // m_player->deleteLater();
+            delete m_player;
+            m_player = nullptr;
         }
 
         m_player = new QMDKPlayer();
 
         m_render->setSource(m_player);
+        // m_player->addRenderer(m_render);
         m_player->setDecoders(QStringList()<<"MFT:d3d=11"<<"CUDA"<<"hap"<<"D3D11"<<"DXVA");
         m_player->setMedia(songName);
         onPlayTimer(m_player->startTime());
         onDuration(m_player->duration());
-        qDebug()<<"时间1"<<m_player->startTime()<<m_player->duration()<<m_player->position();
 
         m_player->setVolume(m_lound->value());
+        m_player->setPlaybackRate(g_rate);
         m_player->play();
+
         //媒体状态
         connect(m_player, SIGNAL(signalMediaStatusChanged(mdk::MediaStatus)), this, SLOT(onMediastatus(mdk::MediaStatus)));
         connect(m_player, SIGNAL(signalStateChanged(mdk::State)), this, SLOT(onStatus(mdk::State)));
@@ -979,9 +1007,8 @@ bool MusicShow::adjustShow()
         m_timerSlider->start(1000);
         if(!issong)m_waiting->show();
         m_render->hide();
-
-        m_preIndexs.push_front(index);
-        m_preIndex++;
+        m_playing = songName;
+        m_preIndexs.append(index);
     }else if(m_player->isPaused() || m_player->isStopped()){
         m_player->play();
         m_timerSlider->start(1000);
@@ -990,7 +1017,7 @@ bool MusicShow::adjustShow()
     }
 
 
-    m_playing = songName;
+
     bool isLiving = isLive(songName);
     m_horizontalSlider->setEnabled(!isLiving);
 
@@ -1033,12 +1060,13 @@ void MusicShow::onSingTheSong(int index)
 
     m_listView->setCurrentIndex(m_model->index(index));
     adjustShow();
-    QThread::usleep(100);
+
 }
 
 // 选择列表当中的曲目
 void MusicShow::onSelectitem(const QModelIndex &index)
 {
+    m_preIndex = -1;
     qDebug()<<"onSelectitem "<<index.row();
     m_listView->setCurrentIndex(index);
     adjustShow();
@@ -1056,7 +1084,9 @@ void MusicShow::onSelectitem_singal(const QModelIndex &index)
 void MusicShow::onPlaySelect()
 {
     QModelIndex index = m_listView->currentIndex();
+    if(!index.isValid())return;
     qDebug()<<"onPlaySelect "<<index.row();
+    m_preIndex = -1;
     adjustShow();
 }
 
@@ -1100,19 +1130,15 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
 {
     if(event->button()==Qt::LeftButton)
     {
-        m_listView->setMinimumWidth(3*m_play->minimumWidth());
-        m_listView->setMaximumWidth(m_play->maximumWidth());
         if(windowState()!=Qt::WindowFullScreen){
-            if(!m_render->isHidden()){
-                m_render->showFullScreen();
-            }
+            if(!m_render->isHidden())m_render->showFullScreen();
             setWindowState(Qt::WindowFullScreen);
         }else{
             setWindowState(Qt::WindowNoState);
-            if(!m_render->isHidden()){
-                m_render->showNormal();
-            }
+            if(!m_render->isHidden())m_render->showNormal();
         }
+        // m_listView->setMinimumWidth(1*m_play->minimumWidth());
+        // m_listView->setMaximumWidth(m_play->maximumWidth());
     }
 
     QWidget::mouseDoubleClickEvent(event);
@@ -1699,16 +1725,21 @@ void MusicShow::onSlowDown()
 
 void MusicShow::onRecover()
 {
-    m_listView->scrollTo(m_model->index(getCurrentIndex()), QListView::PositionAtCenter);
-    if(!m_horizontalSlider->isEnabled())return;
+    m_listView->clearSelection();
+    //
+    QModelIndex index = m_model->index(getCurrentIndex());
 
+    m_listView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::SelectCurrent );
+    m_listView->scrollTo(index, QListView::PositionAtCenter);
+    if(!m_horizontalSlider->isEnabled())return;
     if(!m_isNext){
-        g_rate = 1.0;
         setHint("左前首 右下一首",false);
     }else{
         setHint("左慢 右快",false);
     }
     m_isNext = !m_isNext;
+    g_rate = 1.0;
+    if(m_player)m_player->setPlaybackRate(g_rate);
 }
 
 void MusicShow::onQuickUp()
@@ -1916,7 +1947,6 @@ void MusicShow::onClear()
         m_player = nullptr;
     }
     setHint("",false);
-    m_preIndex = -1;
     m_preIndexs.clear();
     m_model->setStringList(QStringList());
     listTurnVedio(false);
@@ -1926,11 +1956,16 @@ void MusicShow::onClear()
 // 播放
 void MusicShow::onPlay()
 {
-    QModelIndex indexData = m_listView->selectionModel()->selectedIndexes().first();
+    QModelIndexList list = m_listView->selectionModel()->selectedIndexes();
+    if(list.isEmpty())return;
+    QModelIndex indexData =list.first();
+    if(!indexData.isValid())return;
+
     int index = indexData.row();
     qDebug()<<"onPlay index:"<<index;
     if(index < 0)return;
 
+    m_preIndex = -1;
     m_listView->setCurrentIndex(indexData);
     m_waiting->setHidden(false);
     if(!adjustShow()){
@@ -1951,6 +1986,7 @@ void MusicShow::onPause()
 // 停止播放
 void MusicShow::onStop()
 {
+    if(0 == m_model->rowCount())return;
     if(m_player)m_player->stop();
 
     if(!getPlaying().isEmpty()){
@@ -2025,20 +2061,32 @@ void MusicShow::onDeleteItem()
 
     int idx = index.row();
     m_model->removeRow(idx);
-    m_preIndexs = m_preIndexs.toSet().toList() ;
-    for (int i = 0; i < m_preIndexs.size(); ++i) {
-        if(m_preIndexs[i] == idx){
-            if(-1<m_preIndex && idx == m_preIndexs[m_preIndex]){
-                m_preIndex = -1;
-            }
-            m_preIndexs.removeAt(i);
-            break;
-        }
+    int curIdx = getCurrentIndex();
+
+
+    // 大于删除项索引的 则索引缩进
+    if(idx <= curIdx){
+        curIdx--;
+        if(curIdx < 0)curIdx = 0;
+        m_listView->setCurrentIndex(m_model->index(curIdx));
     }
 
 
-    if(songName == m_playing && m_player){
-        m_player->stop();
+    QList<int> tempIndexs;
+    for (int i = 0; i < m_preIndexs.size(); ++i) {
+        if (m_preIndexs[i] < idx){
+            tempIndexs<<m_preIndexs[i];
+        }else if(idx < m_preIndexs[i]){
+            tempIndexs<<m_preIndexs[i]-1;
+        }
+    }
+
+    m_preIndexs = tempIndexs;
+    qDebug()<<"m_preIndexs remove"<<m_preIndexs;
+
+    if(songName == m_playing){
+        m_listView->setCurrentIndex(m_model->index(idx));
+        if(m_player) next();
     }
 }
 
@@ -2083,13 +2131,9 @@ void MusicShow::onMediastatus(mdk::MediaStatus status)
         break;
     case mdk::MediaStatus::Prepared:
         qDebug()<<"Prepared"<<status;
-        //        sigletonShow(false);//正常窗体
-        // setHint(getPlaying()+" 加载中");
         break;
     case mdk::MediaStatus::Stalled:
         qDebug()<<"Stalled"<<status;
-        // qDebug()<<600<<m_listView->currentIndex().row();
-
         break;
     case mdk::MediaStatus::Buffering:
         m_waiting->hide();
@@ -2109,7 +2153,7 @@ void MusicShow::onMediastatus(mdk::MediaStatus status)
         break;
     case mdk::MediaStatus::Invalid:
         qDebug()<<"Invalid"<<status;
-        setHint(" 加载失败 "+getPlaying());
+        setHint("资源无效 "+getPlaying());
         break;
     default:
         // qDebug()<<000000<<status;

@@ -9,7 +9,7 @@
 #include <QRegion>
 #include <QVariant>
 // #include<QImage>
-
+#include <QThread>
 #include "mdk/Player.h"
 
 
@@ -47,13 +47,11 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
     qRegisterMetaType<mdk::MediaStatus>("mdk::MediaStatus");
     //播放状态变化
     player_->onStateChanged([this](mdk::State state) {
-        // qDebug()<<"state"<<int(state);
         emit this->signalStateChanged(state);
     });
 
     //媒体状态变化
     player_->onMediaStatus([this](mdk::MediaStatus oldValue, mdk::MediaStatus newValue) {
-        qDebug()<<"oldValue"<<int(oldValue)<<newValue;
         emit this->signalMediaStatusChanged(newValue);
         return false;
     });
@@ -84,15 +82,12 @@ void QMDKPlayer::setMedia(const QString &url)
 {
     player_->setMedia(url.toUtf8().constData());
     player_->waitFor(mdk::State::Stopped);
-    player_->prepare(0);
-    // player_->prepare(0, [this](int64_t  v, bool *isOk) {
-    //     QMetaObject::invokeMethod(parent(), "readMediaInfo");
-    //     qDebug()<<"setMedia"<<v<<*isOk;
-    //     // if(v == -1){
-    //     //     emit signalMediaStatusChanged(Invalid);
-    //     // }
-    //     return true;
-    // });
+    player_->prepare(0, [this](int64_t  v, bool *isOk) {
+        QMetaObject::invokeMethod(parent(), "readMediaInfo");
+        qDebug()<<"setMedia"<<v<<*isOk;
+        return true;
+    });
+    QThread::usleep(1000);
 }
 void QMDKPlayer::setFilter(const QString &filter)
 {
@@ -105,7 +100,7 @@ void QMDKPlayer::setProperty(const std::string &key, const std::string &value)
 
 void QMDKPlayer::setVolume(float val)
 {
-    player_->setVolume(val);
+    player_->setVolume(val/15);
 }
 
 void QMDKPlayer::setMuted(bool muted)
@@ -121,6 +116,7 @@ void QMDKPlayer::setPlaybackRate(float value)
 
 void QMDKPlayer::play()
 {
+
     player_->set(State::Playing);
 }
 

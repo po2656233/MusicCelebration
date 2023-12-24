@@ -102,7 +102,7 @@ public:
 
     // 正播放的曲目
     QString getPlaying();
-    int  getCurrentIndex()const;
+    int  getCurrentIndex();
 
     // 所有曲目
     QStringList getAllFiles(const QString& dir);
@@ -282,9 +282,8 @@ private:
     bool                    m_isVideo:1;
     bool                    m_isNext:1;
     float                   m_opaclevel;
+    int                     m_preIndex;
 
-
-    int                     m_preIndex;         // 上一首在记录中的索引位置
     qint64                  m_duration;         // 时间周期
     QString                 m_playing;          // 当前播放的文件
     QPoint                  m_dragPosition;     // 窗口移动拖动时需要记住的点
