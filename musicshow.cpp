@@ -2154,6 +2154,7 @@ void MusicShow::onMediastatus(mdk::MediaStatus status)
     case mdk::MediaStatus::Invalid:
         qDebug()<<"Invalid"<<status;
         setHint("资源无效 "+getPlaying());
+        listTurnVedio(false);
         break;
     default:
         // qDebug()<<000000<<status;
