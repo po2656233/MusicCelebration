@@ -87,7 +87,7 @@ void QMDKPlayer::setMedia(const QString &url)
         qDebug()<<"setMedia"<<v<<*isOk;
         return true;
     });
-    QThread::usleep(1000);
+    QThread::usleep(800);
 }
 void QMDKPlayer::setFilter(const QString &filter)
 {
@@ -214,6 +214,7 @@ void QMDKPlayer::destroyGLContext(QObject* vo)
 
     player_->setVideoSurfaceSize(-1, -1, vo); // it's better to cleanup gl renderer resources
 }
+
 
 void QMDKPlayer::setROI(QObject* vo, const float* videoRoi, const float* viewportRoi)
 {

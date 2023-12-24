@@ -975,9 +975,10 @@ bool MusicShow::adjustShow()
         songName = m_mapAnotherName[songName];
     }
     bool issong = isSong(songName);
+    m_waiting->setHidden(issong);;
     if(m_player == nullptr || 0 != songName.compare(m_player->currentMedia())){
         if(m_player){
-            m_player->stop();
+            // m_player->stop();
             // disconnect(m_player, SIGNAL(signalMediaStatusChanged(mdk::MediaStatus)), this, SLOT(onMediastatus(mdk::MediaStatus)));
             // disconnect(m_player, SIGNAL(signalStateChanged(mdk::State)), this, SLOT(onStatus(mdk::State)));
             // m_player->deleteLater();
@@ -986,9 +987,9 @@ bool MusicShow::adjustShow()
         }
 
         m_player = new QMDKPlayer();
-
         m_render->setSource(m_player);
         // m_player->addRenderer(m_render);
+        m_render->hide();
         m_player->setDecoders(QStringList()<<"MFT:d3d=11"<<"CUDA"<<"hap"<<"D3D11"<<"DXVA");
         m_player->setMedia(songName);
         onPlayTimer(m_player->startTime());
@@ -1005,8 +1006,7 @@ bool MusicShow::adjustShow()
 
         m_timerSlider->stop();
         m_timerSlider->start(1000);
-        if(!issong)m_waiting->show();
-        m_render->hide();
+
         m_playing = songName;
         m_preIndexs.append(index);
     }else if(m_player->isPaused() || m_player->isStopped()){
@@ -1099,6 +1099,8 @@ void MusicShow::onStatus(mdk::State status)
     {
     case mdk::State::Playing:
     {
+
+        if(!isSong(m_playing))m_render->setHidden(false);
         m_isPlayer = true;
         sliderStyle(true);
         m_listView->setToolTip(m_playing);
@@ -1517,6 +1519,7 @@ void MusicShow::listTurnVedio(bool isVideo)
         m_listView->setFixedWidth(130);
         m_layout->addWidget(m_listView,0,0,1,1);
     }else{
+        m_waiting->setHidden(true);
         m_render->setHidden(true);
         m_listView->setStyleSheet("border-image:url(:/img/bg3.jpg);background-position:center;background-repeat:no-repeat;");
         m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
@@ -1530,7 +1533,6 @@ void MusicShow::listTurnVedio(bool isVideo)
         if(m_layout->indexOf(m_render)< 0){
             m_layout->addWidget(m_render,0,1,5,5);
         }
-        // m_render->setHidden(!isVideo);
     }
     m_listView->setSelectionRectVisible(true);
     m_title->setHidden(isVideo);
@@ -1987,14 +1989,19 @@ void MusicShow::onPause()
 void MusicShow::onStop()
 {
     if(0 == m_model->rowCount())return;
-    if(m_player)m_player->stop();
-
+    if(m_player){
+        m_player->stop();
+        // disconnect(m_player, SIGNAL(signalMediaStatusChanged(mdk::MediaStatus)), this, SLOT(onMediastatus(mdk::MediaStatus)));
+        // disconnect(m_player, SIGNAL(signalStateChanged(mdk::State)), this, SLOT(onStatus(mdk::State)));
+        // m_player->deleteLater();
+        delete m_player;
+        m_player = nullptr;
+    }
     if(!getPlaying().isEmpty()){
         m_songLrc->clear();
         m_timerSlider->stop();
         setHint("播放停止");
     }
-    m_waiting->setHidden(true);
     listTurnVedio( false);
 }
 
@@ -2110,9 +2117,6 @@ void MusicShow::onCopyItem()
 
 void MusicShow::onMediastatus(mdk::MediaStatus status)
 { qDebug()<<"onMediastatus"<<status;
-    if(!m_waiting->isHidden()){
-        m_waiting->hide();
-    }
     switch ((mdk::MediaStatus)status)
     {
     case mdk::MediaStatus::NoMedia:
@@ -2122,11 +2126,9 @@ void MusicShow::onMediastatus(mdk::MediaStatus status)
         qDebug()<<"Unloaded"<<status;
         break;
     case mdk::MediaStatus::Loading:
-        if(!isSong(m_playing))m_render->setHidden(false);
         qDebug()<<"Loading"<<status;
         break;
     case mdk::MediaStatus::Loaded:
-        if(!isSong(m_playing))m_render->setHidden(false);
         qDebug()<<"Loaded"<<status;
         break;
     case mdk::MediaStatus::Prepared:
