@@ -65,6 +65,7 @@ signals:
     void signalEventChanged(mdk::MediaEvent e);
     void signalMediaStatusChanged(mdk::MediaStatus state);
     void signalReceiveMetaData(QString, QString, QString, QString);
+
 public slots:
     void play();
     void pause(bool value = true);

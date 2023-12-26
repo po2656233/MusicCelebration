@@ -975,23 +975,27 @@ bool MusicShow::adjustShow()
         songName = m_mapAnotherName[songName];
     }
     bool issong = isSong(songName);
-    m_waiting->setHidden(issong);;
+    m_waiting->setHidden(issong);
+    bool isLiving = isLive(songName);
     if(m_player == nullptr || 0 != songName.compare(m_player->currentMedia())){
         if(m_player){
-            // m_player->stop();
-            // disconnect(m_player, SIGNAL(signalMediaStatusChanged(mdk::MediaStatus)), this, SLOT(onMediastatus(mdk::MediaStatus)));
-            // disconnect(m_player, SIGNAL(signalStateChanged(mdk::State)), this, SLOT(onStatus(mdk::State)));
+            m_player->stop();
+            disconnect(m_player, SIGNAL(signalMediaStatusChanged(mdk::MediaStatus)), this, SLOT(onMediastatus(mdk::MediaStatus)));
+            disconnect(m_player, SIGNAL(signalStateChanged(mdk::State)), this, SLOT(onStatus(mdk::State)));
             // m_player->deleteLater();
             delete m_player;
             m_player = nullptr;
         }
 
         m_player = new QMDKPlayer();
-        m_render->setSource(m_player);
-        // m_player->addRenderer(m_render);
-        m_render->hide();
-        m_player->setDecoders(QStringList()<<"MFT:d3d=11"<<"CUDA"<<"hap"<<"D3D11"<<"DXVA");
+        // m_player->stop();
         m_player->setMedia(songName);
+        m_player->setDecoders(QStringList());
+        // if(isLiving){
+        //     m_player->setProperty("avformat.fflags", "+nobuffer");
+        //     m_player->setProperty("avformat.fpsprobesize", "0");
+        // }
+
         onPlayTimer(m_player->startTime());
         onDuration(m_player->duration());
 
@@ -999,10 +1003,12 @@ bool MusicShow::adjustShow()
         m_player->setPlaybackRate(g_rate);
         m_player->play();
 
+        m_render->setSource(m_player);
+        m_render->hide();
+
         //媒体状态
         connect(m_player, SIGNAL(signalMediaStatusChanged(mdk::MediaStatus)), this, SLOT(onMediastatus(mdk::MediaStatus)));
         connect(m_player, SIGNAL(signalStateChanged(mdk::State)), this, SLOT(onStatus(mdk::State)));
-
 
         m_timerSlider->stop();
         m_timerSlider->start(1000);
@@ -1016,11 +1022,7 @@ bool MusicShow::adjustShow()
         return false;;
     }
 
-
-
-    bool isLiving = isLive(songName);
     m_horizontalSlider->setEnabled(!isLiving);
-
     m_listView->scrollTo(m_model->index(getCurrentIndex()));
     m_songLrc->stopLrcMask();
     m_songLrc->clear();
@@ -1049,6 +1051,7 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
         onPause();
         event->accept();
     }
+    qDebug()<<"key "<<event->key();
     QWidget::keyPressEvent(event);
 }
 
@@ -1133,11 +1136,20 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
     if(event->button()==Qt::LeftButton)
     {
         if(windowState()!=Qt::WindowFullScreen){
-            if(!m_render->isHidden())m_render->showFullScreen();
             setWindowState(Qt::WindowFullScreen);
+            // if(!m_render->isHidden()){
+            //     // QRect rect = this->geometry();
+            //     m_render->setWindowFlags(Qt::Window|Qt::FramelessWindowHint);
+            //     // m_render->setFocus();
+            //     m_render->showFullScreen();
+            // }
+
         }else{
             setWindowState(Qt::WindowNoState);
-            if(!m_render->isHidden())m_render->showNormal();
+            // if(!m_render->isHidden()){
+            //     m_render->setWindowFlags(Qt::WindowTitleHint|Qt::WindowSystemMenuHint|Qt::WindowMinMaxButtonsHint|Qt::WindowCloseButtonHint);
+            //     m_render->showNormal();
+            // }
         }
         // m_listView->setMinimumWidth(1*m_play->minimumWidth());
         // m_listView->setMaximumWidth(m_play->maximumWidth());
@@ -1282,7 +1294,6 @@ void MusicShow::closeEvent(QCloseEvent *event)
 {
     event->ignore();
     this->setGeometry(this->geometry());
-    hide();
     emit signalHide();
     
 }
@@ -1991,8 +2002,8 @@ void MusicShow::onStop()
     if(0 == m_model->rowCount())return;
     if(m_player){
         m_player->stop();
-        // disconnect(m_player, SIGNAL(signalMediaStatusChanged(mdk::MediaStatus)), this, SLOT(onMediastatus(mdk::MediaStatus)));
-        // disconnect(m_player, SIGNAL(signalStateChanged(mdk::State)), this, SLOT(onStatus(mdk::State)));
+        disconnect(m_player, SIGNAL(signalMediaStatusChanged(mdk::MediaStatus)), this, SLOT(onMediastatus(mdk::MediaStatus)));
+        disconnect(m_player, SIGNAL(signalStateChanged(mdk::State)), this, SLOT(onStatus(mdk::State)));
         // m_player->deleteLater();
         delete m_player;
         m_player = nullptr;
@@ -2116,7 +2127,8 @@ void MusicShow::onCopyItem()
 // }
 
 void MusicShow::onMediastatus(mdk::MediaStatus status)
-{ qDebug()<<"onMediastatus"<<status;
+{
+    qDebug()<<"onMediastatus"<<(mdk::MediaStatus)status;
     switch ((mdk::MediaStatus)status)
     {
     case mdk::MediaStatus::NoMedia:
@@ -2138,11 +2150,9 @@ void MusicShow::onMediastatus(mdk::MediaStatus status)
         qDebug()<<"Stalled"<<status;
         break;
     case mdk::MediaStatus::Buffering:
-        m_waiting->hide();
         qDebug()<<"Buffering"<<status;
         break;
     case mdk::MediaStatus::Buffered:
-        m_waiting->hide();
         qDebug()<<"Buffered"<<status;
         break;
     case mdk::MediaStatus::End+1:

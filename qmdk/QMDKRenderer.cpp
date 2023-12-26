@@ -150,15 +150,15 @@ void QMDKWidgetRenderer::initializeGL()
 }
 
 // void QMDKWidgetRenderer::snapshot() {
-    // Player::SnapshotRequest sr{};
-    // player_->snapshot(&sr, [](Player::SnapshotRequest *_sr, double frameTime) {
-    //     const QString path = QDir::toNativeSeparators(
-    //         QString("%1/%2.png")
-    //             .arg(QCoreApplication::applicationDirPath())
-    //             .arg(frameTime));
-    //     return path.toStdString();
-        // Here's how to convert SnapshotRequest to QImage and save it to disk.
-        /*if (_sr) {
+// Player::SnapshotRequest sr{};
+// player_->snapshot(&sr, [](Player::SnapshotRequest *_sr, double frameTime) {
+//     const QString path = QDir::toNativeSeparators(
+//         QString("%1/%2.png")
+//             .arg(QCoreApplication::applicationDirPath())
+//             .arg(frameTime));
+//     return path.toStdString();
+// Here's how to convert SnapshotRequest to QImage and save it to disk.
+/*if (_sr) {
             const QImage img = QImage(_sr->data, _sr->width, _sr->height,
                                       QImage::Format_RGBA8888);
             if (img.save(path)) {
@@ -170,7 +170,7 @@ void QMDKWidgetRenderer::initializeGL()
             qDebug() << "Snapshot failed.";
         }
         return "";*/
-    // });
+// });
 // }
 void QMDKWidgetRenderer::resizeGL(int w, int h)
 {
@@ -204,15 +204,23 @@ void QMDKWidgetRenderer::keyPressEvent(QKeyEvent *e)
     case Qt::Key_Left:
         player_->seek(player_->position() - 10000);
         break;
-    // case Qt::Key_C:
-    //     if (QKeySequence(e->modifiers() | e->key()) == QKeySequence::Copy) {
-    //         player_->snapshot();
-    //     }
+    case Qt::Key_Escape:
+        if(!isHidden()){
+            showNormal();
+        }
+        break;
+
+        // case Qt::Key_C:
+        //     if (QKeySequence(e->modifiers() | e->key()) == QKeySequence::Copy) {
+        //         player_->snapshot();
+        //     }
         break;
     default:
         break;
     }
+    return QOpenGLWidget::keyPressEvent(e);
 }
+
 
 
 #endif // QT_WIDGETS_LIB

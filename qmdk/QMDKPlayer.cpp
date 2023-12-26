@@ -41,8 +41,8 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
         QCoreApplication::instance()->postEvent(vo, new QUpdateLaterEvent(QRegion(0, 0, vo->property("width").toInt(), vo->property("height").toInt())));
 #endif
     });
-    player_->setVideoDecoders({"VT", "VAAPI", "MFT:d3d=11", "DXVA", "MMAL", "AMediaCodec:java=1:copy=0:surface=1:async=0", "FFmpeg"});
-
+    // player_->setVideoDecoders({"VT", "VAAPI", "MFT:d3d=11", "DXVA", "MMAL", "AMediaCodec:java=1:copy=0:surface=1:async=0", "FFmpeg"});
+    SetGlobalOption("plugins", "mdk-r3d:mdk-braw");
     qRegisterMetaType<mdk::State>("mdk::State");
     qRegisterMetaType<mdk::MediaStatus>("mdk::MediaStatus");
     //播放状态变化
@@ -71,10 +71,15 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
 QMDKPlayer::~QMDKPlayer()=default;
 void QMDKPlayer::setDecoders(const QStringList &dec)
 {
+    if(dec.isEmpty()){
+        player_->setDecoders(MediaType::Video, {"MFT:d3d=11", "D3D11", "CUDA", "hap", "FFmpeg", "dav1d"});
+        return;
+    }
     std::vector<std::string> v;
     foreach (QString d, dec) {
         v.push_back(d.toStdString());
     }
+
     player_->setDecoders(MediaType::Video, v);
 }
 
@@ -87,7 +92,8 @@ void QMDKPlayer::setMedia(const QString &url)
         qDebug()<<"setMedia"<<v<<*isOk;
         return true;
     });
-    QThread::usleep(800);
+    // QThread::usleep(800);
+    QThread::msleep(100);
 }
 void QMDKPlayer::setFilter(const QString &filter)
 {
@@ -168,7 +174,7 @@ qint64 QMDKPlayer::duration() const
 
     std::vector<mdk::VideoStreamInfo> videoTrackInfo = mediaInfo.video;
     foreach (mdk::VideoStreamInfo info, videoTrackInfo) {
-       return info.duration;
+        return info.duration;
     }
     return mediaInfo.duration;
 }
@@ -185,10 +191,10 @@ qint64 QMDKPlayer::startTime() const
 
     std::vector<mdk::VideoStreamInfo> videoTrackInfo = mediaInfo.video;
     foreach (mdk::VideoStreamInfo info, videoTrackInfo) {
-         qDebug()<<"start_time2 "<<info.start_time;
+        qDebug()<<"start_time2 "<<info.start_time;
         return info.start_time;
     }
-     qDebug()<<"start_time3 "<<mediaInfo.start_time;
+    qDebug()<<"start_time3 "<<mediaInfo.start_time;
     return mediaInfo.start_time;
 }
 
@@ -211,7 +217,6 @@ void QMDKPlayer::renderVideo(QObject* vo)
 
 void QMDKPlayer::destroyGLContext(QObject* vo)
 {
-
     player_->setVideoSurfaceSize(-1, -1, vo); // it's better to cleanup gl renderer resources
 }
 
