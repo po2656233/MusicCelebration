@@ -2116,7 +2116,9 @@ void MusicShow::onCopyItem()
         return;
 
     //将数据放入剪贴板
-    QApplication::clipboard()->setText(m_model->data(indexList.first()).toString());
+    QString songName = m_model->data(indexList.first()).toString();
+    if(!m_mapAnotherName[songName].isNull() && !m_mapAnotherName[songName].isEmpty())songName = m_mapAnotherName[songName];
+    QApplication::clipboard()->setText(songName);
 }
 
 // void MusicShow::onErr(QMediaPlayer::Error error)
