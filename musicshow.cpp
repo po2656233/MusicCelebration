@@ -1078,7 +1078,7 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
         // event->ignore();
         break;
     }
-    qDebug()<<"key "<<event->key();
+    // qDebug()<<"key "<<event->key();
     QWidget::keyPressEvent(event);
 }
 

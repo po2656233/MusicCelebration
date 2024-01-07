@@ -36,7 +36,7 @@ static void InitEnv()
 #endif
 
     // nobuffer -analyzeduration 1000000 -rtsp_transport tcp
-    // SetGlobalOption("avformat", "fflags=nobuffer:analyzeduration=1000000:rtsp_transport=tcp:fpsprobesize=0:avioflags=direct");
+    SetGlobalOption("avformat", "fflags=+nobuffer:analyzeduration=10000:fpsprobesize=0:avioflags=direct");
     // SetGlobalOption("plugins", "mdk-r3d:mdk-braw");
 }
 
@@ -47,8 +47,8 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
     qRegisterMetaType<mdk::State>("mdk::State");
     qRegisterMetaType<mdk::MediaStatus>("mdk::MediaStatus");
 
-    static std::once_flag initFlag;
-    std::call_once(initFlag, InitEnv);
+    // static std::once_flag initFlag;
+    // std::call_once(initFlag, InitEnv);
 
 
     player_->setRenderCallback([](void* vo_opaque){
@@ -74,14 +74,14 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
 #endif
     });
 
-    player_->setBufferRange(0,10240000,true);
+    // player_->setBufferRange(0,1000,true);
     //播放状态变化
     player_->onStateChanged([this](mdk::State state) {
         emit this->signalStateChanged(state);
     });
 
     //媒体状态变化
-    player_->onMediaStatus([this](mdk::MediaStatus oldValue, mdk::MediaStatus newValue) {
+    player_->onMediaStatus([this](mdk::MediaStatus, mdk::MediaStatus newValue) {
         emit this->signalMediaStatusChanged(newValue);
         return true;
     });
@@ -104,25 +104,26 @@ QMDKPlayer::~QMDKPlayer()=default;
 void QMDKPlayer::setDecoders(const QStringList &dec)
 {
     if(dec.isEmpty()){
-        player_->setDecoders(MediaType::Video, {
-#if (__APPLE__+0)
-            "VT",
-                "hap",
-#elif (__ANDROID__+0)
-                "AMediaCodec:java=0:copy=0:surface=1:async=0",
-#elif (_WIN32+0)
-                "MFT:d3d=11",
-                    "CUDA",
-                    "hap",
-                    "D3D11",
-                    "DXVA",
-#elif (__linux__+0)
-                "hap",
-                    "VAAPI",
-                    "VDPAU",
-                    "CUDA",
-#endif
-                "FFmpeg"});
+         player_->setDecoders(MediaType::Video, {"MFT:d3d=11", "D3D11", "CUDA", "hap", "FFmpeg", "dav1d"});
+//         player_->setDecoders(MediaType::Video, {
+// #if (__APPLE__+0)
+//             "VT",
+//                 "hap",
+// #elif (__ANDROID__+0)
+//                 "AMediaCodec:java=0:copy=0:surface=1:async=0",
+// #elif (_WIN32+0)
+//                 "MFT:d3d=11",
+//                     "CUDA",
+//                     "hap",
+//                     "D3D11",
+//                     "DXVA",
+// #elif (__linux__+0)
+//                 "hap",
+//                     "VAAPI",
+//                     "VDPAU",
+//                     "CUDA",
+// #endif
+//                 "FFmpeg"});
         return;
     }
     std::vector<std::string> v;
