@@ -15,10 +15,42 @@
 
 
 using namespace MDK_NS;
+static void InitEnv()
+{
+#ifdef QX11INFO_X11_H
+    SetGlobalOption("X11Display", QX11Info::display());
+    qDebug("X11 display: %p", QX11Info::display());
+#elif (QT_FEATURE_xcb + 0 == 1) && (QT_VERSION >= QT_VERSION_CHECK(6, 2, 0))
+    const auto x = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
+    if (x) {
+        const auto xdisp = x->display();
+        SetGlobalOption("X11Display", xdisp);
+        qDebug("X11 display: %p", xdisp);
+    }
+#endif
+#ifdef QJNI_ENVIRONMENT_H
+    SetGlobalOption("JavaVM", QJniEnvironment::javaVM());
+#endif
+#ifdef QANDROIDJNIENVIRONMENT_H
+    SetGlobalOption("JavaVM", QAndroidJniEnvironment::javaVM());
+#endif
+
+    // nobuffer -analyzeduration 1000000 -rtsp_transport tcp
+    // SetGlobalOption("avformat", "fflags=nobuffer:analyzeduration=1000000:rtsp_transport=tcp:fpsprobesize=0:avioflags=direct");
+    // SetGlobalOption("plugins", "mdk-r3d:mdk-braw");
+}
+
 QMDKPlayer::QMDKPlayer(QObject *parent)
     : QObject(parent)
     , player_(new Player())
 {
+    qRegisterMetaType<mdk::State>("mdk::State");
+    qRegisterMetaType<mdk::MediaStatus>("mdk::MediaStatus");
+
+    static std::once_flag initFlag;
+    std::call_once(initFlag, InitEnv);
+
+
     player_->setRenderCallback([](void* vo_opaque){
         auto vo = reinterpret_cast<QObject*>(vo_opaque);
         if (!vo->isWidgetType()) { // isWidgetType() is fastest, and no need to include <QWidget>
@@ -41,10 +73,8 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
         QCoreApplication::instance()->postEvent(vo, new QUpdateLaterEvent(QRegion(0, 0, vo->property("width").toInt(), vo->property("height").toInt())));
 #endif
     });
-    // player_->setVideoDecoders({"VT", "VAAPI", "MFT:d3d=11", "DXVA", "MMAL", "AMediaCodec:java=1:copy=0:surface=1:async=0", "FFmpeg"});
-    SetGlobalOption("plugins", "mdk-r3d:mdk-braw");
-    qRegisterMetaType<mdk::State>("mdk::State");
-    qRegisterMetaType<mdk::MediaStatus>("mdk::MediaStatus");
+
+    player_->setBufferRange(0,10240000,true);
     //播放状态变化
     player_->onStateChanged([this](mdk::State state) {
         emit this->signalStateChanged(state);
@@ -53,10 +83,12 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
     //媒体状态变化
     player_->onMediaStatus([this](mdk::MediaStatus oldValue, mdk::MediaStatus newValue) {
         emit this->signalMediaStatusChanged(newValue);
-        return false;
+        return true;
     });
 
 
+    // player_->setBufferRange(0, -1, false);
+    // player_->setBufferRange(0, 1000, false);
     //各种事件触发
     // player_->onEvent([this](const mdk::MediaEvent & e) {
     //     emit signalEventChanged(e);
@@ -72,7 +104,25 @@ QMDKPlayer::~QMDKPlayer()=default;
 void QMDKPlayer::setDecoders(const QStringList &dec)
 {
     if(dec.isEmpty()){
-        player_->setDecoders(MediaType::Video, {"MFT:d3d=11", "D3D11", "CUDA", "hap", "FFmpeg", "dav1d"});
+        player_->setDecoders(MediaType::Video, {
+#if (__APPLE__+0)
+            "VT",
+                "hap",
+#elif (__ANDROID__+0)
+                "AMediaCodec:java=0:copy=0:surface=1:async=0",
+#elif (_WIN32+0)
+                "MFT:d3d=11",
+                    "CUDA",
+                    "hap",
+                    "D3D11",
+                    "DXVA",
+#elif (__linux__+0)
+                "hap",
+                    "VAAPI",
+                    "VDPAU",
+                    "CUDA",
+#endif
+                "FFmpeg"});
         return;
     }
     std::vector<std::string> v;

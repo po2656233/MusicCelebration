@@ -278,7 +278,13 @@ MusicShow::MusicShow(QWidget *parent) :
     m_actQuit->setShortcut(QKeySequence(Qt::Key_F4));
     //    m_actCopy->setShortcut(QKeySequence(Qt::Key_Copy));
     m_playMode->setShortcut(QKeySequence(Qt::Key_M));
-    
+    m_play->setShortcutAutoRepeat(true);//设置autoReapeat属性
+    m_paused->setShortcutAutoRepeat(true);
+    m_stop->setShortcutAutoRepeat(true);
+    m_loading->setShortcutAutoRepeat(true);
+    m_playMode->setShortcutAutoRepeat(true);
+
+
     // 字体编排
     m_hintInfo->setWordWrap(true);
     m_hintInfo->setAlignment(Qt::AlignTop|Qt::AlignCenter);
@@ -333,7 +339,7 @@ MusicShow::MusicShow(QWidget *parent) :
     m_listView->setWordWrap(true);
     m_listView->setModel(m_model);
     m_listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_listView->installEventFilter(this);
+    // m_listView->installEventFilter(this);
     m_listView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_preIndexs.clear();
@@ -372,7 +378,7 @@ MusicShow::MusicShow(QWidget *parent) :
     connect(m_actCopy, &QAction::triggered, this, &MusicShow::onCopyItem);
     connect(m_actDelete, &QAction::triggered, this, &MusicShow::onDeleteItem);
     connect(m_actClear, &QAction::triggered, this, &MusicShow::onClear);
-    connect(m_actQuit,SIGNAL(triggered()),qApp,SLOT(quit()));
+    connect(m_actQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(m_listView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(onContextmenu(QPoint)));
 
     //播放速度
@@ -1036,20 +1042,41 @@ bool MusicShow::adjustShow()
 
 void MusicShow::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Plus)
-    {
-        int val = m_lound->value();
-        m_lound->setValue(val+1);
+    switch (Qt::Key(event->key())) {
+    case Qt::Key_Plus:
+        m_lound->setValue(m_lound->value()+1);
         event->accept();
-    }else if (event->key() == Qt::Key_Minus)
-    {
-        int val = m_lound->value();
-        m_lound->setValue(val-1);
+        break;
+    case Qt::Key_Minus:
+        m_lound->setValue(m_lound->value()-1);
         event->accept();
-    }else if (event->key() == Qt::Key_P)
-    {
+        break;
+    case Qt::Key_P:
         onPause();
         event->accept();
+        break;
+    case Qt::Key_Space:
+        if(m_player != nullptr){
+            if(m_player->isPaused()){
+                m_player->play();
+            }else if(m_player->isPlaying()){
+                onPause();
+            }
+        }
+        qDebug()<<"Key_Space ";
+        event->accept();
+        break;
+    case Qt::Key_F4:
+        m_actQuit->trigger();
+        break;
+    case Qt::Key_Escape:
+        if(windowState()==Qt::WindowFullScreen){
+            setWindowState(Qt::WindowNoState);
+        }
+        break;
+    default:
+        // event->ignore();
+        break;
     }
     qDebug()<<"key "<<event->key();
     QWidget::keyPressEvent(event);
@@ -1160,7 +1187,7 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
 
 void MusicShow::mousePressEvent(QMouseEvent *event)
 {
-    if (Qt::LeftButton == event->button() || Qt::RightButton == event->button())
+    if (Qt::LeftButton == event->button())
     {
         isLeftPressDown = true;
         if(m_direct != NONE)
@@ -1172,8 +1199,8 @@ void MusicShow::mousePressEvent(QMouseEvent *event)
             m_dragPosition = event->globalPos() - pos();
         }
     }
-    // event->ignore();
-    // QWidget::mousePressEvent(event);
+    event->ignore();
+    QWidget::mousePressEvent(event);
 }
 
 void MusicShow::mouseMoveEvent(QMouseEvent *event)
@@ -1257,10 +1284,10 @@ void MusicShow::mouseReleaseEvent(QMouseEvent *event)
     m_dragPosition = QPoint(0,0);
     QApplication::restoreOverrideCursor();
     
-    if (m_isPlayer && m_isVideo)
-    {
-        // listTurnVedio(m_isVideo);
-    }
+    // if (m_isPlayer && m_isVideo)
+    // {
+    //     // listTurnVedio(m_isVideo);
+    // }
 
     event->ignore();
     QWidget::mouseReleaseEvent(event);
@@ -1288,6 +1315,7 @@ void MusicShow::contextMenuEvent(QContextMenuEvent *event)
     m_popMenu->setStyleSheet(tr("QMenu{background-color:#4169E1;}"));
     m_popMenu->exec(QCursor::pos());
     event->accept();
+    return QWidget::contextMenuEvent(event);
 }
 
 void MusicShow::closeEvent(QCloseEvent *event)
@@ -1295,7 +1323,7 @@ void MusicShow::closeEvent(QCloseEvent *event)
     event->ignore();
     this->setGeometry(this->geometry());
     emit signalHide();
-    
+    return QWidget::closeEvent(event);
 }
 
 void MusicShow::wheelEvent(QWheelEvent *event)
@@ -1315,26 +1343,26 @@ void MusicShow::wheelEvent(QWheelEvent *event)
 
 bool MusicShow::eventFilter(QObject *target, QEvent *event)
 {
-    if(target == m_listView)
-    {
-        // 键盘事件
-        if (event->type() == QEvent::KeyPress)
-        {
-            int key = ((QKeyEvent *)event)->key();
-            int val = m_lound->value();
-            if (key== Qt::Key_Plus)
-            {
-                m_lound->setValue(val+1);
+    // if(target == m_listView)
+    // {
+    //     // 键盘事件
+    //     if (event->type() == QEvent::KeyPress)
+    //     {
+    //         int key = ((QKeyEvent *)event)->key();
+    //         int val = m_lound->value();
+    //         if (key== Qt::Key_Plus)
+    //         {
+    //             m_lound->setValue(val+1);
 
-            }else if (key == Qt::Key_Minus)
-            {
-                m_lound->setValue(val-1);
-            }
-            return true;
-        }
-    }
+    //         }else if (key == Qt::Key_Minus)
+    //         {
+    //             m_lound->setValue(val-1);
+    //         }
+    //         return true;
+    //     }
+    // }
 
-    // standard event processing
+    // // standard event processing
     return QWidget::eventFilter(target, event);
 }
 
@@ -1809,7 +1837,7 @@ void MusicShow::onTopWindow()
     }
     else
     {
-        m_actTop->setText("平平无奇");
+        m_actTop->setText("季孟之间");
         if (isNoBorder)
             this->setWindowFlags(Qt::WindowStaysOnTopHint);
         else

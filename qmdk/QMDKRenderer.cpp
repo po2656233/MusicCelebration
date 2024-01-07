@@ -188,38 +188,40 @@ void QMDKWidgetRenderer::paintGL()
     afterGL();
 }
 
-void QMDKWidgetRenderer::keyPressEvent(QKeyEvent *e)
-{
-    switch (e->key()) {
-    case Qt::Key_Space: {
-        if (player_->isPaused())
-            player_->play();
-        else
-            player_->pause();
-    }
-    break;
-    case Qt::Key_Right:
-        player_->seek(player_->position() + 10000);
-        break;
-    case Qt::Key_Left:
-        player_->seek(player_->position() - 10000);
-        break;
-    case Qt::Key_Escape:
-        if(!isHidden()){
-            showNormal();
-        }
-        break;
+// void QMDKWidgetRenderer::keyPressEvent(QKeyEvent *e)
+// {
+//     switch (e->key()) {
+//     case Qt::Key_Space:
+//         player_->isPaused()?player_->play():player_->pause();
+//         e->accept();
+//         break;
+//     case Qt::Key_Right:
+//         player_->seek(player_->position() + 10000);
+//         e->accept();
+//         break;
+//     case Qt::Key_Left:
+//         player_->seek(player_->position() - 10000);
+//         e->accept();
+//         break;
+//     case Qt::Key_Escape:
+//         if(!isHidden()){
+//             showNormal();
+//         }
+//         e->accept();
+//         break;
 
-        // case Qt::Key_C:
-        //     if (QKeySequence(e->modifiers() | e->key()) == QKeySequence::Copy) {
-        //         player_->snapshot();
-        //     }
-        break;
-    default:
-        break;
-    }
-    return QOpenGLWidget::keyPressEvent(e);
-}
+//         // case Qt::Key_C:
+//         //     if (QKeySequence(e->modifiers() | e->key()) == QKeySequence::Copy) {
+//         //         player_->snapshot();
+//         //     }
+//         // break;
+//     default:
+//         e->ignore();
+//         break;
+//     }
+
+//     return QWidget::keyPressEvent(e);
+// }
 
 
 

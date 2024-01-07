@@ -52,7 +52,7 @@ protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
-    void keyPressEvent(QKeyEvent *e)override;
+    // void keyPressEvent(QKeyEvent *e)override;
 private:
     QMDKPlayer* player_ = nullptr;
 };
