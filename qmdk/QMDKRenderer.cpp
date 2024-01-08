@@ -118,7 +118,7 @@ QMDKWidgetRenderer::~QMDKWidgetRenderer() = default;
 
 void QMDKWidgetRenderer::setSource(QMDKPlayer* player)
 {
-    setProperty("devicePixelRatio", devicePixelRatio());
+    // setProperty("devicePixelRatio", devicePixelRatio());
     player->addRenderer(this); // use QWidget* instead of QOpenGLContext* as vo_opaque must ensure context() will not change, e.g. no reparenting the widget via setParent()
     player_ = player;
     if (player) {

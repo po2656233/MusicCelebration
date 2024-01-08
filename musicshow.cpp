@@ -98,7 +98,7 @@ QStringList videoList = QStringList()<<"*.mp4"<<"*.mov"<<"*.mkv"\
                                       <<"*.avi"<<"*.m3u8";
 
 // 直播源
-QStringList liveList = QStringList()<<"*.m3u8"<<"*.m3u"<<"*.php?"<<"http://"<<"https://";
+QStringList liveList = QStringList()<<"*.m3u8"<<"*.m3u"<<"*.php?"<<"http://"<<"https://"<<"rtsp://"<<"rtmp://";
 
 
 #define PADDING 2 //边距
@@ -325,7 +325,6 @@ MusicShow::MusicShow(QWidget *parent) :
     // m_render->setSource(m_player);
     // m_player->setDecoders(QStringList()<<"MFT:d3d=11"<<"CUDA"<<"hap"<<"D3D11"<<"DXVA");
     // m_render->hide();
-
     //    m_view->setPlayer(m_player);
 
     m_lound->setValue(50);
@@ -890,14 +889,11 @@ void MusicShow::setHint(QString hint, bool isRightIn, int showtime)
     m_effect->update();
 
     // 控制文本展示数目
-    QString apostrophe = "";
-    int size = hint.length();
-    if(0 < size - 11){
-        apostrophe = "...";
-        size = 8;
+    if(0 < hint.length() - 11){
+        hint = hint.left(9)+"...";
     }
 
-    m_hintInfo->setText(hint.left(size).split("", QString::SkipEmptyParts).join("\n"));
+    m_hintInfo->setText(hint.split("", QString::SkipEmptyParts).join("\n"));
     m_hintInfo->show();
     qDebug()<<"设置提示:"<<hint;
     if(isRightIn){
@@ -997,10 +993,10 @@ bool MusicShow::adjustShow()
         // m_player->stop();
         m_player->setMedia(songName);
         m_player->setDecoders(QStringList());
-        // if(isLiving){
-        //     m_player->setProperty("avformat.fflags", "+nobuffer");
-        //     m_player->setProperty("avformat.fpsprobesize", "0");
-        // }
+        if(isLiving){
+            m_player->setProperty("avformat.fflags", "+nobuffer");
+            m_player->setProperty("avformat.fpsprobesize", "0");
+        }
 
         onPlayTimer(m_player->startTime());
         onDuration(m_player->duration());
@@ -1075,7 +1071,7 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
         }
         break;
     default:
-        // event->ignore();
+        event->ignore();
         break;
     }
     // qDebug()<<"key "<<event->key();
@@ -1321,10 +1317,17 @@ void MusicShow::contextMenuEvent(QContextMenuEvent *event)
 void MusicShow::closeEvent(QCloseEvent *event)
 {
     event->ignore();
-    this->setGeometry(this->geometry());
+    this->hide();
     emit signalHide();
-    return QWidget::closeEvent(event);
 }
+
+// void MusicShow::hideEvent(QHideEvent *event)
+// {
+//     event->ignore();
+//     this->setGeometry(this->geometry());
+//     emit signalHide();
+//     return QWidget::hideEvent(event);
+// }
 
 void MusicShow::wheelEvent(QWheelEvent *event)
 {
@@ -1341,35 +1344,35 @@ void MusicShow::wheelEvent(QWheelEvent *event)
     return QWidget::wheelEvent(event);
 }
 
-bool MusicShow::eventFilter(QObject *target, QEvent *event)
-{
-    // if(target == m_listView)
-    // {
-    //     // 键盘事件
-    //     if (event->type() == QEvent::KeyPress)
-    //     {
-    //         int key = ((QKeyEvent *)event)->key();
-    //         int val = m_lound->value();
-    //         if (key== Qt::Key_Plus)
-    //         {
-    //             m_lound->setValue(val+1);
+// bool MusicShow::eventFilter(QObject *target, QEvent *event)
+// {
+//     // if(target == m_listView)
+//     // {
+//     //     // 键盘事件
+//     //     if (event->type() == QEvent::KeyPress)
+//     //     {
+//     //         int key = ((QKeyEvent *)event)->key();
+//     //         int val = m_lound->value();
+//     //         if (key== Qt::Key_Plus)
+//     //         {
+//     //             m_lound->setValue(val+1);
 
-    //         }else if (key == Qt::Key_Minus)
-    //         {
-    //             m_lound->setValue(val-1);
-    //         }
-    //         return true;
-    //     }
-    // }
+//     //         }else if (key == Qt::Key_Minus)
+//     //         {
+//     //             m_lound->setValue(val-1);
+//     //         }
+//     //         return true;
+//     //     }
+//     // }
 
-    // // standard event processing
-    return QWidget::eventFilter(target, event);
-}
+//     // // standard event processing
+//     return QWidget::eventFilter(target, event);
+// }
 
 
 void MusicShow::onLoading()
 {
-    DialogMx *loadDlg = new DialogMx(this);
+    DialogMx *loadDlg = new DialogMx();
     loadDlg->setGeometry(this->pos().x()+m_loading->x(),this->pos().y()+m_loading->y()-75-m_loading->height(),m_loading->width(),100);
     if(m_isTop)
         loadDlg->setWindowFlags(Qt::WindowStaysOnTopHint|Qt::Dialog|Qt::FramelessWindowHint);
@@ -1859,7 +1862,7 @@ void MusicShow::onTopWindow()
 // 播放模式
 void MusicShow::onPlayModelClicked()
 {
-    DialogMx *addressGlg = new DialogMx(this);
+    DialogMx *addressGlg = new DialogMx();
     addressGlg->setGeometry(this->pos().x()+m_playMode->x(),this->pos().y()+m_playMode->y()-178-m_playMode->height(),m_playMode->width(),180);
     if(m_isTop)
         addressGlg->setWindowFlags(Qt::WindowStaysOnTopHint|Qt::Dialog|Qt::FramelessWindowHint);
@@ -1936,7 +1939,7 @@ void MusicShow::onPlayModelClicked()
     
 }
 
-void MusicShow::OnTrayActivated(QSystemTrayIcon::ActivationReason reason)
+void MusicShow::onTrayActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch(reason)
     {
@@ -1948,6 +1951,7 @@ void MusicShow::OnTrayActivated(QSystemTrayIcon::ActivationReason reason)
         break;
     }
 }
+
 
 void MusicShow::onSigletonShow()
 {

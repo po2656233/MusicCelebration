@@ -87,12 +87,14 @@ void SingleApplication::toTray()
           QMessageBox::critical(NULL, QObject::tr("系统托盘"), QObject::tr("不支持系统托盘"));
           return;
       }
+
   if(!m_mainWindow) return;
   SystemTrayMx *systemTray = new SystemTrayMx(m_mainWindow);
   systemTray->setMiddleClickText(tr("系统托盘"));
   systemTray->setToolTips(tr("应用程序系统托盘"));
-  systemTray->setHideText(tr("勿相忘"));
-  connect(m_mainWindow,SIGNAL(signalHide()),systemTray,SLOT(show()));
+  systemTray->setHideText(tr("苟富贵勿相忘"));
+  systemTray->setVisible(false);
+  connect(m_mainWindow,SIGNAL(signalHide()),systemTray,SLOT(slotShow()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

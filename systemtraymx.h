@@ -36,6 +36,7 @@ public:
 
  private slots:
      void slotActivated(QSystemTrayIcon::ActivationReason reason);
+     void slotShow();
      void showParentWidget();
      void slotHelpAction();
      void slotClicked();

@@ -49,7 +49,7 @@ void SystemTrayMx::setToolTips(const QString &tips)
 
 void SystemTrayMx::startHideTips()
 {
-    this->showMessage(tr("提示信息："), hideText, QSystemTrayIcon::Information, 2000);
+    this->showMessage(tr("托盘模式"), hideText, QSystemTrayIcon::Warning, 2000);
 }
 
 void SystemTrayMx::createActions()
@@ -137,7 +137,6 @@ void SystemTrayMx::slotActivated(QSystemTrayIcon::ActivationReason reason)
                 }
                 else {
                     parentWidget->hide();
-                    startHideTips();
                 }
                 break;
             }
@@ -166,6 +165,12 @@ void SystemTrayMx::slotActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 
+void SystemTrayMx::slotShow()
+{
+    this->show();
+    startHideTips();
+}
+
 void SystemTrayMx::showParentWidget()
 {
   if(!parentWidget||!showAction) return;
@@ -176,7 +181,6 @@ void SystemTrayMx::showParentWidget()
     }
     else {
         parentWidget->hide();
-        startHideTips();
     }
 }
 
@@ -198,6 +202,5 @@ void SystemTrayMx::slotClicked()
     }
     else {
         parentWidget->hide();
-        startHideTips();
     }
 }

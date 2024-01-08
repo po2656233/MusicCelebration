@@ -15,31 +15,6 @@
 
 
 using namespace MDK_NS;
-static void InitEnv()
-{
-#ifdef QX11INFO_X11_H
-    SetGlobalOption("X11Display", QX11Info::display());
-    qDebug("X11 display: %p", QX11Info::display());
-#elif (QT_FEATURE_xcb + 0 == 1) && (QT_VERSION >= QT_VERSION_CHECK(6, 2, 0))
-    const auto x = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
-    if (x) {
-        const auto xdisp = x->display();
-        SetGlobalOption("X11Display", xdisp);
-        qDebug("X11 display: %p", xdisp);
-    }
-#endif
-#ifdef QJNI_ENVIRONMENT_H
-    SetGlobalOption("JavaVM", QJniEnvironment::javaVM());
-#endif
-#ifdef QANDROIDJNIENVIRONMENT_H
-    SetGlobalOption("JavaVM", QAndroidJniEnvironment::javaVM());
-#endif
-
-    // nobuffer -analyzeduration 1000000 -rtsp_transport tcp
-    SetGlobalOption("avformat", "fflags=+nobuffer:analyzeduration=10000:fpsprobesize=0:avioflags=direct");
-    // SetGlobalOption("plugins", "mdk-r3d:mdk-braw");
-}
-
 QMDKPlayer::QMDKPlayer(QObject *parent)
     : QObject(parent)
     , player_(new Player())
@@ -47,8 +22,10 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
     qRegisterMetaType<mdk::State>("mdk::State");
     qRegisterMetaType<mdk::MediaStatus>("mdk::MediaStatus");
 
-    // static std::once_flag initFlag;
-    // std::call_once(initFlag, InitEnv);
+
+    // fflags=+nobuffer:analyzeduration=1000:fpsprobesize=60:avioflags=direct
+    // SetGlobalOption("avformat", "fflags=+shortest:fpsprobesize=0:flush_packets=1:avioflags=direct");
+    // SetGlobalOption("plugins", "mdk-r3d:mdk-braw");
 
 
     player_->setRenderCallback([](void* vo_opaque){
@@ -88,7 +65,7 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
 
 
     // player_->setBufferRange(0, -1, false);
-    // player_->setBufferRange(0, 1000, false);
+    player_->setBufferRange(0, 1000, false);
     //各种事件触发
     // player_->onEvent([this](const mdk::MediaEvent & e) {
     //     emit signalEventChanged(e);
