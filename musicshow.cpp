@@ -869,10 +869,8 @@ void MusicShow::synchronyLrc(const QString &fileName)
     QFileInfo info(fileName);
     QString songName = info.fileName();
     int size = songName.length()-4;
-    if(0<size - 11){
-        size = 8;
-    }
-    setHint(songName.left(size),false);
+    songName = 0<size - 11?songName.left(8)+"...":songName.left(size);
+    setHint(songName,false);
 
     // 展示歌词
     if (!m_isLrc){
