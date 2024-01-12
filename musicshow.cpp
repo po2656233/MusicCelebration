@@ -296,7 +296,7 @@ MusicShow::MusicShow(QWidget *parent) :
     pa.setColor(QPalette::WindowText,Qt::red);
     m_hintInfo->setPalette(pa);
     m_hintInfo->setFont(QFont("FZShuTi", 18));
-    pa.setColor(QPalette::WindowText,QColor("#9370DB"));
+    pa.setColor(QPalette::WindowText,QColor("#0070DB"));//#9370DB
     m_playInfo->setPalette(pa);
     m_playInfo->setFont(QFont("FangSong", 16));
 
@@ -1568,6 +1568,7 @@ void MusicShow::listTurnVedio(bool isVideo)
         m_listView->setMinimumWidth(3*m_play->minimumWidth());
         m_listView->setMaximumWidth(m_play->maximumWidth());
         m_layout->addWidget(m_listView,1,1,4,4);
+        m_playInfo->setText(tr("天涯海角")); //播放信息
     }
     if(m_render){
         if(m_layout->indexOf(m_render)< 0){
@@ -1993,6 +1994,7 @@ void MusicShow::onClear()
     m_preIndexs.clear();
     m_model->setStringList(QStringList());
     listTurnVedio(false);
+    m_songLrc->hide();
     QFile::remove(m_recordFile);
 }
 
