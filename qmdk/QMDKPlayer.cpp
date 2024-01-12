@@ -65,7 +65,7 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
 
 
     // player_->setBufferRange(0, -1, false);
-    player_->setBufferRange(0, 1000, false);
+    // player_->setBufferRange(0, 1000, false);
     //各种事件触发
     // player_->onEvent([this](const mdk::MediaEvent & e) {
     //     emit signalEventChanged(e);
