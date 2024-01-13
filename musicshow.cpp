@@ -1364,8 +1364,7 @@ bool MusicShow::eventFilter(QObject *target, QEvent *event)
     //         return true;
     //     }
     // }
-    if(m_render && target == m_render && windowState()==Qt::WindowFullScreen &&
-        !m_render->isHidden() ){
+    if(m_render && target == m_render && windowState()==Qt::WindowFullScreen && !m_render->isHidden() ){
         if (event->type() == QEvent::MouseButtonDblClick ){
             m_render->setWindowFlags(Qt::WindowTitleHint|Qt::WindowSystemMenuHint|Qt::WindowMinMaxButtonsHint|Qt::WindowCloseButtonHint);
             m_render->showNormal();
