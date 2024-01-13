@@ -45,6 +45,7 @@ public:
     void setSource(QMDKPlayer* player);
     QMDKPlayer* source() const { return player_; }
     void setROI(const float* videoRoi, const float* viewportRoi = nullptr);
+
 protected:
     virtual void beforeGL() {}
     virtual void afterGL() {}
@@ -52,7 +53,6 @@ protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
-    // void keyPressEvent(QKeyEvent *e)override;
 private:
     QMDKPlayer* player_ = nullptr;
 };

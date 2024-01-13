@@ -22,6 +22,8 @@
 
 int main(int argc, char *argv[])
 {
+    // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL, true);
+    // QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts, true);
     qputenv("QT_MEDIA_BACKEND", "windows");
     SingleApplication a(argc, argv);
     if (!a.isRunning())

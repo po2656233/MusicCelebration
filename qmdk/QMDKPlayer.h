@@ -70,6 +70,8 @@ public slots:
     void play();
     void pause(bool value = true);
     void stop();
+
+
 private:
     std::unique_ptr<mdk::Player> player_;
 };

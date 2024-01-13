@@ -343,6 +343,8 @@ MusicShow::MusicShow(QWidget *parent) :
 
     m_preIndexs.clear();
 
+    m_render->installEventFilter(this);
+
     // 关联信号和槽
     //加载文件
     connect(m_loading,SIGNAL(clicked()),this,SLOT(onLoading()));
@@ -1066,13 +1068,18 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Escape:
         if(windowState()==Qt::WindowFullScreen){
             setWindowState(Qt::WindowNoState);
+            if(!m_render->isHidden()){
+                m_render->setWindowFlags(Qt::WindowTitleHint|Qt::WindowSystemMenuHint|Qt::WindowMinMaxButtonsHint|Qt::WindowCloseButtonHint);
+                m_render->showNormal();
+            }
         }
+        event->accept();
         break;
     default:
         event->ignore();
         break;
     }
-    // qDebug()<<"key "<<event->key();
+    qDebug()<<"key "<<event->key();
     QWidget::keyPressEvent(event);
 }
 
@@ -1158,24 +1165,19 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
     {
         if(windowState()!=Qt::WindowFullScreen){
             setWindowState(Qt::WindowFullScreen);
-            // if(!m_render->isHidden()){
-            //     // QRect rect = this->geometry();
-            //     m_render->setWindowFlags(Qt::Window|Qt::FramelessWindowHint);
-            //     // m_render->setFocus();
-            //     m_render->showFullScreen();
-            // }
-
+            if(!m_render->isHidden()){
+                // QRect rect = this->geometry();
+                m_render->setWindowFlags(Qt::Window|Qt::FramelessWindowHint);
+                m_render->setFocus();
+                m_render->showFullScreen();
+            }
         }else{
             setWindowState(Qt::WindowNoState);
-            // if(!m_render->isHidden()){
-            //     m_render->setWindowFlags(Qt::WindowTitleHint|Qt::WindowSystemMenuHint|Qt::WindowMinMaxButtonsHint|Qt::WindowCloseButtonHint);
-            //     m_render->showNormal();
-            // }
         }
         // m_listView->setMinimumWidth(1*m_play->minimumWidth());
         // m_listView->setMaximumWidth(m_play->maximumWidth());
     }
-
+    event->ignore();
     QWidget::mouseDoubleClickEvent(event);
 }
 
@@ -1342,30 +1344,44 @@ void MusicShow::wheelEvent(QWheelEvent *event)
     return QWidget::wheelEvent(event);
 }
 
-// bool MusicShow::eventFilter(QObject *target, QEvent *event)
-// {
-//     // if(target == m_listView)
-//     // {
-//     //     // 键盘事件
-//     //     if (event->type() == QEvent::KeyPress)
-//     //     {
-//     //         int key = ((QKeyEvent *)event)->key();
-//     //         int val = m_lound->value();
-//     //         if (key== Qt::Key_Plus)
-//     //         {
-//     //             m_lound->setValue(val+1);
+bool MusicShow::eventFilter(QObject *target, QEvent *event)
+{
+    // if(target == m_listView)
+    // {
+    //     // 键盘事件
+    //     if (event->type() == QEvent::KeyPress)
+    //     {
+    //         int key = ((QKeyEvent *)event)->key();
+    //         int val = m_lound->value();
+    //         if (key== Qt::Key_Plus)
+    //         {
+    //             m_lound->setValue(val+1);
 
-//     //         }else if (key == Qt::Key_Minus)
-//     //         {
-//     //             m_lound->setValue(val-1);
-//     //         }
-//     //         return true;
-//     //     }
-//     // }
-
-//     // // standard event processing
-//     return QWidget::eventFilter(target, event);
-// }
+    //         }else if (key == Qt::Key_Minus)
+    //         {
+    //             m_lound->setValue(val-1);
+    //         }
+    //         return true;
+    //     }
+    // }
+    if(m_render && target == m_render && windowState()==Qt::WindowFullScreen &&
+        !m_render->isHidden() ){
+        if (event->type() == QEvent::MouseButtonDblClick ){
+            m_render->setWindowFlags(Qt::WindowTitleHint|Qt::WindowSystemMenuHint|Qt::WindowMinMaxButtonsHint|Qt::WindowCloseButtonHint);
+            m_render->showNormal();
+            event->ignore();
+        }else if (event->type() == QEvent::KeyPress){
+            int key = ((QKeyEvent *)event)->key();
+            if (key==Qt::Key_Escape){
+                m_render->setWindowFlags(Qt::WindowTitleHint|Qt::WindowSystemMenuHint|Qt::WindowMinMaxButtonsHint|Qt::WindowCloseButtonHint);
+                m_render->showNormal();
+                event->ignore();
+            }
+        }
+    }
+    // // standard event processing
+    return QWidget::eventFilter(target, event);
+}
 
 
 void MusicShow::onLoading()
