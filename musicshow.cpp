@@ -1068,10 +1068,12 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Escape:
         if(windowState()==Qt::WindowFullScreen){
             setWindowState(Qt::WindowNoState);
+            QRect rect = this->geometry();
             if(!m_render->isHidden()){
                 m_render->setWindowFlags(Qt::WindowTitleHint|Qt::WindowSystemMenuHint|Qt::WindowMinMaxButtonsHint|Qt::WindowCloseButtonHint);
                 m_render->showNormal();
             }
+            setGeometry(rect);
         }
         event->accept();
         break;
@@ -1263,6 +1265,7 @@ void MusicShow::mouseMoveEvent(QMouseEvent *event)
                 break;
             }
             this->setGeometry(rMove);
+            event->accept();
         }
         else
         {
@@ -1270,7 +1273,7 @@ void MusicShow::mouseMoveEvent(QMouseEvent *event)
             event->accept();
         }
     }
-    event->ignore();
+    // event->ignore();
     QWidget::mouseMoveEvent(event);
 }
 
