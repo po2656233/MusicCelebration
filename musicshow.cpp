@@ -175,7 +175,7 @@ MusicShow::MusicShow(QWidget *parent) :
     
     m_hintInfo = new QLabel(tr("祝君好心情")); //播放信息
     m_playInfo = new QLabel(tr("天涯海角")); //播放信息
-    m_title = new BlinkBtn("高山流水"); //标题
+    m_title = new BlinkBtn("视听之美"); //标题
     m_speedControl = new SpeedControl();//进度标题
     m_timer = new QTimer(); //定时器
     m_timerSlider = new QTimer();
