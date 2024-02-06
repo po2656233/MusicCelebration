@@ -443,8 +443,7 @@ MusicShow::~MusicShow()
         m_player = nullptr;
     }
     if(m_render){
-        delete m_render;
-        m_render = nullptr;
+        m_render->deleteLater();
     }
     if(m_songLrc)
     {
@@ -1069,7 +1068,6 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
         if(windowState()==Qt::WindowFullScreen){
             setWindowState(Qt::WindowNoState);
             if(!m_render->isHidden()){
-                m_render->setWindowFlags(Qt::WindowTitleHint|Qt::WindowSystemMenuHint|Qt::WindowMinMaxButtonsHint|Qt::WindowCloseButtonHint);
                 m_render->showNormal();
             }
         }
@@ -1166,8 +1164,6 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
         if(windowState()!=Qt::WindowFullScreen){
             setWindowState(Qt::WindowFullScreen);
             if(!m_render->isHidden()){
-                // QRect rect = this->geometry();
-                m_render->setWindowFlags(Qt::Window|Qt::FramelessWindowHint);
                 m_render->setFocus();
                 m_render->showFullScreen();
             }
