@@ -24,7 +24,7 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
 
 
     // fflags=+nobuffer:analyzeduration=1000:fpsprobesize=60:avioflags=direct
-    // SetGlobalOption("avformat", "fflags=+shortest:fpsprobesize=0:flush_packets=1:avioflags=direct");
+    SetGlobalOption("avformat", "fflags=+shortest:fpsprobesize=0:flush_packets=1:avioflags=direct");
     // SetGlobalOption("plugins", "mdk-r3d:mdk-braw");
 
 
