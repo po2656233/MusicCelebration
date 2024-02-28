@@ -396,6 +396,11 @@ MusicShow::MusicShow(QWidget *parent) :
     m_timer->start(30);
     connect(m_timerSlider,SIGNAL(timeout()),this,SLOT(onTimeOut()));
 
+    // 光标自动消失
+    // QTimer* timer_ = new QTimer(this);
+    // connect(timer_ ,&QTimer::timeout, this, [=](){this->setCursor(Qt::BlankCursor);});
+    // timer_->start(10000);
+
     loadRecord();
 }
 
@@ -443,8 +448,7 @@ MusicShow::~MusicShow()
         m_player = nullptr;
     }
     if(m_render){
-        delete m_render;
-        m_render = nullptr;
+        m_render->deleteLater();
     }
     if(m_songLrc)
     {
@@ -1070,7 +1074,6 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
             setWindowState(Qt::WindowNoState);
             QRect rect = this->geometry();
             if(!m_render->isHidden()){
-                m_render->setWindowFlags(Qt::WindowTitleHint|Qt::WindowSystemMenuHint|Qt::WindowMinMaxButtonsHint|Qt::WindowCloseButtonHint);
                 m_render->showNormal();
             }
             setGeometry(rect);
@@ -1161,21 +1164,28 @@ void MusicShow::onStatus(mdk::State status)
 
 
 // 双击全屏
+bool isFull = false;
+#include <QtPlatformHeaders/QWindowsWindowFunctions>
 void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
 {
+
     if(event->button()==Qt::LeftButton)
     {
-        if(windowState()!=Qt::WindowFullScreen){
-            setWindowState(Qt::WindowFullScreen);
+        if(!isFull){
+            this->showFullScreen();
+
+            // // 修复全屏后，右键无法弹窗。需要鼠标移动右键
+            winId(); // 分配窗口句柄 若无此句，会在 qscopedpointer.h的 T *operator->() const noexcept  { return d; } 引发异常
+            QWindowsWindowFunctions::setHasBorderInFullScreen(windowHandle(), true);
             if(!m_render->isHidden()){
-                // QRect rect = this->geometry();
-                m_render->setWindowFlags(Qt::Window|Qt::FramelessWindowHint);
                 m_render->setFocus();
                 m_render->showFullScreen();
             }
+
         }else{
             setWindowState(Qt::WindowNoState);
         }
+        isFull = !isFull;
         // m_listView->setMinimumWidth(1*m_play->minimumWidth());
         // m_listView->setMaximumWidth(m_play->maximumWidth());
     }
@@ -1203,7 +1213,7 @@ void MusicShow::mousePressEvent(QMouseEvent *event)
 
 void MusicShow::mouseMoveEvent(QMouseEvent *event)
 {
-    //changeMouseIcon('C');
+    // changeMouseIcon(0);
     QPoint gloPoint = event->globalPos();
     QRect rect = this->rect();
     QPoint tl = mapToGlobal(rect.topLeft());

@@ -42,12 +42,11 @@ int main(int argc, char *argv[])
         qss.close();
 
         //传入一个要激活程序的窗口，当多开时会激活已有进程的窗口，且多开失败
-        MusicShow w;
-
-        a.setMainWindow(&w);
+        MusicShow* w = new MusicShow();
+        a.setMainWindow(w);
         a.toSlowly();
         a.toTray();
-        w.show();
+        w->show();
         return a.exec();
     }
     return 0;
