@@ -175,7 +175,7 @@ MusicShow::MusicShow(QWidget *parent) :
     
     m_hintInfo = new QLabel(tr("祝君好心情")); //播放信息
     m_playInfo = new QLabel(tr("天涯海角")); //播放信息
-    m_title = new BlinkBtn("视听之美"); //标题
+    m_title = new BlinkBtn("高山流水"); //标题
     m_speedControl = new SpeedControl();//进度标题
     m_timer = new QTimer(); //定时器
     m_timerSlider = new QTimer();
@@ -398,8 +398,9 @@ MusicShow::MusicShow(QWidget *parent) :
 
     // 光标自动消失
     // QTimer* timer_ = new QTimer(this);
-    // connect(timer_ ,&QTimer::timeout, this, [=](){this->setCursor(Qt::BlankCursor);});
-    // timer_->start(10000);
+    // connect(timer_ ,&QTimer::timeout, this, [=](){
+    //     if(m_isVideo)this->setCursor(Qt::BlankCursor);});
+    // timer_->start(7000);
 
     loadRecord();
 }
@@ -578,7 +579,7 @@ bool MusicShow::addWeb(QString origData, bool orderDesc)
     }
     QString webAddr = origData;
     // 解析地址
-    webAddr.replace(" ","|");
+    // webAddr.replace(" ","|");
     webAddr.replace(",","|");
     QStringList webInfo = webAddr.split("|");
     QString anotherName = "";
@@ -1035,6 +1036,7 @@ bool MusicShow::adjustShow()
     listTurnVedio(!issong);
     if(m_isShowLrc && isLiving){
         m_songLrc->hide();
+        m_render->unsetCursor();
     }
     return true;
 }
@@ -1172,18 +1174,19 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
     if(event->button()==Qt::LeftButton)
     {
         if(!isFull){
-            this->showFullScreen();
-
             // // 修复全屏后，右键无法弹窗。需要鼠标移动右键
             winId(); // 分配窗口句柄 若无此句，会在 qscopedpointer.h的 T *operator->() const noexcept  { return d; } 引发异常
             QWindowsWindowFunctions::setHasBorderInFullScreen(windowHandle(), true);
             if(!m_render->isHidden()){
+                m_render->setWindowFlags(Qt::Window|Qt::FramelessWindowHint);
                 m_render->setFocus();
                 m_render->showFullScreen();
+                m_render->setCursor(Qt::BlankCursor);
             }
-
+            this->showFullScreen();
         }else{
             setWindowState(Qt::WindowNoState);
+            m_render->setCursor(Qt::ArrowCursor);
         }
         isFull = !isFull;
         // m_listView->setMinimumWidth(1*m_play->minimumWidth());
@@ -1213,7 +1216,7 @@ void MusicShow::mousePressEvent(QMouseEvent *event)
 
 void MusicShow::mouseMoveEvent(QMouseEvent *event)
 {
-    // changeMouseIcon(0);
+    changeMouseIcon(0);
     QPoint gloPoint = event->globalPos();
     QRect rect = this->rect();
     QPoint tl = mapToGlobal(rect.topLeft());
@@ -2043,6 +2046,8 @@ void MusicShow::onPlay()
     m_waiting->setHidden(false);
     if(!adjustShow()){
         m_waiting->setHidden(true);
+        // 隐藏光标
+        this->setCursor(Qt::BlankCursor);
     }
 }
 
