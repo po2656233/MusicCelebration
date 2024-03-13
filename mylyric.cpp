@@ -21,7 +21,7 @@
 MyLyric::MyLyric(QWidget *parent) :
     QLabel(parent)
 {
-    setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
+    setWindowFlags(Qt::Window | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     // 设置背景透明
     setAttribute(Qt::WA_TranslucentBackground);
     setText(QStringLiteral("歌词信息"));
@@ -110,7 +110,7 @@ bool MyLyric::loadLrc(const QString *fileName)
     file.close();
 
     // 按歌词格式保存信息
-    QRegExp rx("\\[\\d{2}:\\d{2}\\.\\d{2}\\]");
+    QRegExp rx("\\[\\d{2}:\\d{2}\\.\\d{2,3}\\]");
     foreach (QString item, all_text) {
         QString temp = item;
         temp.replace(rx, "");//用空字符串替换正则表达式中所匹配的地方,这样就获得了歌词文本
@@ -128,13 +128,12 @@ bool MyLyric::loadLrc(const QString *fileName)
             regexp.setPattern("\\d{2}(?=\\.)");
             regexp.indexIn(cap);
             int second = regexp.cap(0).toInt();
-            regexp.setPattern("\\d{2}(?=\\])");
+            regexp.setPattern("\\d{2,3}(?=\\])");
             regexp.indexIn(cap);
             int millisecond = regexp.cap(0).toInt();
-            qint64 totalTime = minute * 60000 + second * 1000 + millisecond * 10;
+            qint64 totalTime = minute * 60000 + second * 1000 + millisecond;
             // m_lrc
-            QString* value = new QString(temp);
-            m_lrc.insert(totalTime, value);
+            m_lrc.insert(totalTime, new QString(temp));
             pos += rx.matchedLength();
             pos = rx.indexIn(item, pos);//匹配全部
         }

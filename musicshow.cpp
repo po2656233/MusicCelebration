@@ -172,8 +172,8 @@ MusicShow::MusicShow(QWidget *parent) :
     QDir dir(m_songsDir);
     if(!dir.exists())dir.mkdir(m_songsDir);
     m_recordFile = QDir(QCoreApplication::applicationDirPath()).absoluteFilePath("live.dat");
-    
-    m_hintInfo = new QLabel(tr("祝君好心情")); //播放信息
+    m_hintInfo = new QLabel(tr("祝君好心情"));   //播放信息
+    m_singnerInfo = new QLabel();               //歌手信息
     m_playInfo = new QLabel(tr("天涯海角")); //播放信息
     m_title = new BlinkBtn("高山流水"); //标题
     m_speedControl = new SpeedControl();//进度标题
@@ -223,7 +223,7 @@ MusicShow::MusicShow(QWidget *parent) :
 
     m_title->setFixedHeight(72);
     m_playInfo->setFixedHeight(72);
-
+    m_singnerInfo->setFixedWidth(20);
     // 布局
     this->setLayout(m_layout);
     this->resize(800,500);
@@ -238,13 +238,18 @@ MusicShow::MusicShow(QWidget *parent) :
     m_layout->addWidget(m_waiting,0,1,5,5);
     m_layout->addWidget(m_listView,1,1,4,4);
 
-    QHBoxLayout* hLayout = new QHBoxLayout;
-    hLayout->addWidget(m_play);
-    hLayout->addWidget(m_paused);
-    hLayout->addWidget(m_stop);
-    m_layout->addLayout(hLayout,5,1,1,4);
+    QHBoxLayout* hLayout1 = new QHBoxLayout;
+    hLayout1->addWidget(m_play);
+    hLayout1->addWidget(m_paused);
+    hLayout1->addWidget(m_stop);
+    m_layout->addLayout(hLayout1,5,1,1,4);
     m_layout->addWidget(m_horizontalSlider,6,1,1,4);
-    m_layout->addWidget(m_hintInfo,0,0,3,1);
+
+    QHBoxLayout* hLayout2 = new QHBoxLayout;
+    hLayout2->addWidget(m_singnerInfo);
+    hLayout2->addWidget(m_hintInfo);
+    hLayout2->setSpacing(8);
+    m_layout->addLayout(hLayout2,0,0,3,1);
     m_layout->addWidget(m_playInfo,0,5,1,1,Qt::AlignHCenter);
     m_layout->addWidget(m_lound,1,5,4,1,Qt::AlignVCenter);
     m_layout->addWidget(m_playMode,5,5,1,1);
@@ -290,12 +295,23 @@ MusicShow::MusicShow(QWidget *parent) :
     m_hintInfo->setAlignment(Qt::AlignTop|Qt::AlignCenter);
     QString word = m_hintInfo->text();
     m_hintInfo->setText(word.split("").join("\n"));
+    // 歌手信息
+    m_singnerInfo->setWordWrap(true);
+    m_singnerInfo->setAlignment(Qt::AlignTop|Qt::AlignRight);
+    word = m_singnerInfo->text();
+    m_singnerInfo->setText(word.split("").join("\n"));
 
     // 设置字体颜色
     QPalette pa;
     pa.setColor(QPalette::WindowText,Qt::red);
     m_hintInfo->setPalette(pa);
-    m_hintInfo->setFont(QFont("FZShuTi", 18));
+    m_hintInfo->setFont(QFont("FangSong", 18));
+
+    pa.setColor(QPalette::WindowText,Qt::yellow);
+    m_singnerInfo->setPalette(pa);
+    m_singnerInfo->setFont(QFont("FZShuTi", 14));
+    m_singnerInfo->hide();
+
     pa.setColor(QPalette::WindowText,QColor("#0070DB"));//#9370DB
     m_playInfo->setPalette(pa);
     m_playInfo->setFont(QFont("FangSong", 16));
@@ -401,8 +417,8 @@ MusicShow::MusicShow(QWidget *parent) :
     // connect(timer_ ,&QTimer::timeout, this, [=](){
     //     if(m_isVideo)this->setCursor(Qt::BlankCursor);});
     // timer_->start(7000);
-
     loadRecord();
+
 }
 
 MusicShow::~MusicShow()
@@ -503,6 +519,10 @@ MusicShow::~MusicShow()
     {
         delete m_hintInfo;
         m_hintInfo = nullptr;
+    }
+    if (m_singnerInfo){
+        delete m_singnerInfo;
+        m_singnerInfo = nullptr;
     }
     if(m_playInfo)
     {
@@ -742,7 +762,11 @@ int MusicShow::getCurrentIndex()
 
 void MusicShow::sigletonShow(bool isShow)
 {
-    m_listView->setHidden(isShow);
+    if(isShow){
+        m_hintInfo->setHidden(true);
+        m_singnerInfo->setHidden(true);
+    }
+
     m_loading->setHidden(isShow);
     //m_lound->setHidden(isShow);
     m_paused->setHidden(isShow);
@@ -752,6 +776,7 @@ void MusicShow::sigletonShow(bool isShow)
     m_playMode->setHidden(isShow);
     m_horizontalSlider->setHidden(isShow);
     m_timeUp->setHidden(isShow);
+    m_listView->setHidden(isShow);
 }
 
 void MusicShow::saveLiveInfo(const QString &data, bool isBatch)
@@ -875,8 +900,18 @@ void MusicShow::synchronyLrc(const QString &fileName)
     // 提示信息 展示歌曲
     QFileInfo info(fileName);
     QString songName = info.fileName();
-    int size = songName.length()-4;
-    songName = 0<size - 11?songName.left(8)+"...":songName.left(size);
+    songName.replace(".mp3","");
+    songName.replace(" ","");
+    QStringList songinfo = songName.split("-");
+    QString singner;
+    if(1 < songinfo.length()){
+        singner = songinfo.at(0);
+    }
+    songName = songinfo.takeLast();
+    songinfo = songName.split("(");
+    songName = songinfo.takeFirst();
+    songinfo = songName.split("（");
+    songName = songinfo.takeFirst();
     setHint(songName,false);
 
     // 展示歌词
@@ -884,8 +919,13 @@ void MusicShow::synchronyLrc(const QString &fileName)
         m_songLrc->setText(info.fileName());
     }
     if(m_isShowLrc) m_songLrc->show();
+    if (!singner.isEmpty()){
+        m_singnerInfo->setText(singner.split("").join("\n"));
+        m_singnerInfo->show();
+    }else{
+        m_singnerInfo->hide();
+    }
 }
-
 void MusicShow::setHint(QString hint, bool isRightIn, int showtime)
 {
     m_timer->stop();
@@ -895,7 +935,7 @@ void MusicShow::setHint(QString hint, bool isRightIn, int showtime)
 
     // 控制文本展示数目
     if(0 < hint.length() - 11){
-        hint = hint.left(9)+"...";
+        hint = hint.left(10)+"~";
     }
 
     m_hintInfo->setText(hint.split("", QString::SkipEmptyParts).join("\n"));
@@ -946,7 +986,6 @@ void MusicShow::loadRecord()
     }
     m_isFirst = false;
 }
-
 
 void MusicShow::saveRecord()
 {
@@ -1503,20 +1542,21 @@ void MusicShow::onLoadingWeb()
 
         // 加载网络资源
         QString webAddr = inputWeb->text();
-        QString head = tr("file:///");
-        if(webAddr.left(head.length()) == head){
-            webAddr.replace(head,"");
-        }
+        if(!webAddr.isEmpty()){
+            QString head = tr("file:///");
+            if(webAddr.left(head.length()) == head){
+                webAddr.replace(head,"");
+            }
 
-        if(QFileInfo(webAddr).isFile()){
-            // 从文本中获取
-            addWebList(webAddr);
-        }else if (!addWeb(webAddr)){// 添加网址
-            isLoadNow = false;
-            inputWeb->setEnabled(true);
-            return ;
+            if(QFileInfo(webAddr).isFile()){
+                // 从文本中获取
+                addWebList(webAddr);
+            }else if (!addWeb(webAddr)){// 添加网址
+                isLoadNow = false;
+                inputWeb->setEnabled(true);
+                return ;
+            }
         }
-
         // 发送结束信号
         emit inputWeb->over();
     });
@@ -1584,6 +1624,7 @@ void MusicShow::listTurnVedio(bool isVideo)
 {
     m_layout->removeWidget(m_listView);
     if(isVideo){
+        m_singnerInfo->hide();
         m_listView->setStyleSheet("border-image:url(:/img/bg1.jpg);background-color: #412550;background-position:center;background-repeat:no-repeat;");
         m_listView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         m_listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -2076,6 +2117,7 @@ void MusicShow::onStop()
     if(!getPlaying().isEmpty()){
         m_songLrc->clear();
         m_timerSlider->stop();
+        m_singnerInfo->hide();
         setHint("播放停止");
     }
     listTurnVedio( false);
@@ -2099,7 +2141,12 @@ void MusicShow::onOpacity()
         m_opaclevel -= 0.02;
         m_effect->setOpacity(m_opaclevel);
         if(m_opaclevel < 0){
+            QPalette pa;
+            pa.setColor(QPalette::WindowText,Qt::blue);
+            m_hintInfo->setPalette(pa);
+            m_hintInfo->setAlignment(Qt::AlignTop|Qt::AlignLeading);
             m_hintInfo -> hide();
+            m_singnerInfo->hide();
             m_timer->stop();
         }
     }
@@ -2225,6 +2272,7 @@ void MusicShow::onMediastatus(mdk::MediaStatus status)
     case mdk::MediaStatus::End+1:
         qDebug()<<"End"<<status;
         m_playInfo->setText("天涯海角");
+        m_singnerInfo->hide();
         next();
         break;
     case mdk::MediaStatus::Seeking:

@@ -231,6 +231,7 @@ private:
     Direction               m_direct;       //方向
     QLabel*                 m_playInfo;     //播放信息
     QLabel*                 m_hintInfo;     //提示信息
+    QLabel*                 m_singnerInfo;  //歌手名称
     BlinkBtn*               m_title;        //标题
     SpeedControl*           m_speedControl; //播放速度控制
     QTimer*                 m_timer;        //定时器
