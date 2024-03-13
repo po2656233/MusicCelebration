@@ -2117,7 +2117,7 @@ void MusicShow::onStop()
     if(!getPlaying().isEmpty()){
         m_songLrc->clear();
         m_timerSlider->stop();
-        m_singnerInfo->hide();
+        // m_singnerInfo->hide();
         setHint("播放停止");
     }
     listTurnVedio( false);
