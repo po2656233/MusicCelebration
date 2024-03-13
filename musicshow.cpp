@@ -223,7 +223,7 @@ MusicShow::MusicShow(QWidget *parent) :
 
     m_title->setFixedHeight(72);
     m_playInfo->setFixedHeight(72);
-    m_singnerInfo->setFixedWidth(20);
+    m_singnerInfo->setFixedWidth(18);
     // 布局
     this->setLayout(m_layout);
     this->resize(800,500);
