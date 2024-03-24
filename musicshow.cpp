@@ -172,6 +172,7 @@ MusicShow::MusicShow(QWidget *parent) :
     QDir dir(m_songsDir);
     if(!dir.exists())dir.mkdir(m_songsDir);
     m_recordFile = QDir(QCoreApplication::applicationDirPath()).absoluteFilePath("live.dat");
+    m_configFile = QDir(QCoreApplication::applicationDirPath()).absoluteFilePath("init.dat");
     m_hintInfo = new QLabel(tr("祝君好心情"));   //播放信息
     m_singnerInfo = new QLabel();               //歌手信息
     m_playInfo = new QLabel(tr("天涯海角")); //播放信息
@@ -292,7 +293,7 @@ MusicShow::MusicShow(QWidget *parent) :
 
     // 字体编排
     m_hintInfo->setWordWrap(true);
-    m_hintInfo->setAlignment(Qt::AlignTop|Qt::AlignCenter);
+    m_hintInfo->setAlignment(Qt::AlignTop|Qt::AlignHCenter);
     QString word = m_hintInfo->text();
     m_hintInfo->setText(word.split("").join("\n"));
     // 歌手信息
@@ -305,7 +306,7 @@ MusicShow::MusicShow(QWidget *parent) :
     QPalette pa;
     pa.setColor(QPalette::WindowText,Qt::red);
     m_hintInfo->setPalette(pa);
-    m_hintInfo->setFont(QFont("FangSong", 18));
+    m_hintInfo->setFont(QFont("FZShuTi", 18));
 
     pa.setColor(QPalette::WindowText,Qt::yellow);
     m_singnerInfo->setPalette(pa);
@@ -395,7 +396,7 @@ MusicShow::MusicShow(QWidget *parent) :
     connect(m_actCopy, &QAction::triggered, this, &MusicShow::onCopyItem);
     connect(m_actDelete, &QAction::triggered, this, &MusicShow::onDeleteItem);
     connect(m_actClear, &QAction::triggered, this, &MusicShow::onClear);
-    connect(m_actQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(m_actQuit, SIGNAL(triggered()), this, SLOT(onQuit()));
     connect(m_listView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(onContextmenu(QPoint)));
 
     //播放速度
@@ -423,7 +424,6 @@ MusicShow::MusicShow(QWidget *parent) :
 
 MusicShow::~MusicShow()
 {
-    saveRecord();
     if(m_model)
     {
         delete m_model;
@@ -939,6 +939,7 @@ void MusicShow::setHint(QString hint, bool isRightIn, int showtime)
     }
 
     m_hintInfo->setText(hint.split("", QString::SkipEmptyParts).join("\n"));
+    m_hintInfo->setAlignment(Qt::AlignTop|Qt::AlignJustify);
     m_hintInfo->show();
     qDebug()<<"设置提示:"<<hint;
     if(isRightIn){
@@ -984,6 +985,29 @@ void MusicShow::loadRecord()
         }
         file.close();
     }
+    file.setFileName(m_configFile);
+    if(file.open(QIODevice::ReadOnly)){
+        //第二种方式就是一数据流读取文件内容
+        QDataStream in(&file);
+        int val;
+        in>>m_enModule>>val>>m_playing;
+        onLoundSliderMoved(val);
+        qDebug()<<m_enModule<<val<<m_playing;
+        if(!m_playing.isNull() && !m_playing.isEmpty()){
+            for (int i = 0; i < m_model->rowCount(); i++) {
+                QModelIndex index = m_model->index(i);
+                if(m_playing == m_mapAnotherName[index.data().toString()]){
+                    qDebug()<<"当前索引 --->"<<i;
+                    m_listView->setCurrentIndex(index);
+                    m_listView->scrollTo(index, QListView::PositionAtTop);
+                    break;
+                }
+            }
+        }
+        file.close();
+    }else{
+        qDebug()<<file.errorString()<<m_configFile;
+    }
     m_isFirst = false;
 }
 
@@ -991,7 +1015,7 @@ void MusicShow::saveRecord()
 {
     QString songName;
     QFile file(m_recordFile);
-    if (file.open(QIODevice::WriteOnly|QIODevice::Text)){
+    if (file.open(QIODevice::WriteOnly| QIODevice::Truncate|QIODevice::Text)){
         QTextStream textStream(&file);
         textStream.setGenerateByteOrderMark(true);    //这句是重点改成bom格式
         textStream.setCodec("UTF-8");
@@ -1002,6 +1026,16 @@ void MusicShow::saveRecord()
             }
             textStream<<encrypt(songName)<<Qt::endl;
         }
+        file.flush();
+        file.close();
+    }
+    file.setFileName(m_configFile);
+    if(file.open(QIODevice::WriteOnly| QIODevice::Truncate|QIODevice::Text)){
+        //第二种方式就是一数据流读取文件内容
+        QDataStream in(&file);
+        int val = m_lound->value();
+        in<<m_enModule<<val<<m_playing;
+        qDebug()<<m_enModule<<val<<m_playing;
         file.flush();
         file.close();
     }
@@ -2070,6 +2104,13 @@ void MusicShow::onClear()
     QFile::remove(m_recordFile);
 }
 
+void MusicShow::onQuit()
+{
+    saveRecord();
+    this->deleteLater();
+    qApp->quit();
+}
+
 // 播放
 void MusicShow::onPlay()
 {
@@ -2142,7 +2183,7 @@ void MusicShow::onOpacity()
         m_effect->setOpacity(m_opaclevel);
         if(m_opaclevel < 0){
             QPalette pa;
-            pa.setColor(QPalette::WindowText,Qt::blue);
+            pa.setColor(QPalette::WindowText,Qt::red);
             m_hintInfo->setPalette(pa);
             m_hintInfo->setAlignment(Qt::AlignTop|Qt::AlignLeading);
             m_hintInfo -> hide();
@@ -2280,7 +2321,9 @@ void MusicShow::onMediastatus(mdk::MediaStatus status)
         break;
     case mdk::MediaStatus::Invalid:
         qDebug()<<"Invalid"<<status;
-        setHint("资源无效 "+getPlaying());
+        m_singnerInfo->setText("资源无效");
+        m_singnerInfo->show();
+        setHint(getPlaying());
         listTurnVedio(false);
         break;
     default:

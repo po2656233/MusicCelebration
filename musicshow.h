@@ -200,6 +200,8 @@ private slots:
     void onCopyItem();
     void onClear();
 
+    void onQuit();
+
     // 异常处理
     // void onErr(QMediaPlayer::Error error);
 
@@ -291,6 +293,7 @@ private:
     QPoint                  m_dragPosition;     // 窗口移动拖动时需要记住的点
     QString                 m_songsDir;         // 导入的音视频目录
     QString                 m_recordFile;       // 记录文件
+    QString                 m_configFile;       // 配置信息
     QFileInfoList           m_songList;         // 文件列表
     PlayerModule            m_enModule;         // 播放模式
 
