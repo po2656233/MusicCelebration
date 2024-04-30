@@ -1243,7 +1243,6 @@ bool isFull = false;
 #include <QtPlatformHeaders/QWindowsWindowFunctions>
 void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
 {
-
     if(event->button()==Qt::LeftButton)
     {
         if(!isFull){
@@ -1251,22 +1250,27 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
             winId(); // 分配窗口句柄 若无此句，会在 qscopedpointer.h的 T *operator->() const noexcept  { return d; } 引发异常
             QWindowsWindowFunctions::setHasBorderInFullScreen(windowHandle(), true);
             if(!m_render->isHidden()){
+                 m_render->setFocus();
                 m_render->setWindowFlags(Qt::Window|Qt::FramelessWindowHint);
-                m_render->setFocus();
                 m_render->showFullScreen();
                 m_render->setCursor(Qt::BlankCursor);
+            }else{
+                this->setFocus();
             }
             this->showFullScreen();
         }else{
             setWindowState(Qt::WindowNoState);
             m_render->setCursor(Qt::ArrowCursor);
+
         }
         isFull = !isFull;
         // m_listView->setMinimumWidth(1*m_play->minimumWidth());
         // m_listView->setMaximumWidth(m_play->maximumWidth());
     }
+
     event->ignore();
-    QWidget::mouseDoubleClickEvent(event);
+    // 调用按下 避免拖拽
+    QWidget::mousePressEvent(event);
 }
 
 void MusicShow::mousePressEvent(QMouseEvent *event)
@@ -1359,7 +1363,7 @@ void MusicShow::mouseMoveEvent(QMouseEvent *event)
             event->accept();
         }
     }
-    // event->ignore();
+    event->ignore();
     QWidget::mouseMoveEvent(event);
 }
 

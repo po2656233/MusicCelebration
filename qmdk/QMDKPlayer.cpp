@@ -24,7 +24,8 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
 
 
     // fflags=+nobuffer:analyzeduration=1000:fpsprobesize=60:avioflags=direct
-    SetGlobalOption("avformat", "fflags=+shortest:fpsprobesize=0:flush_packets=1:avioflags=direct");
+    // fflags=+shortest:fpsprobesize=0:flush_packets=1:avioflags=direct
+    SetGlobalOption("avformat", "fflags=+shortest:fpsprobesize=60:flush_packets=1:avioflags=direct");
     // SetGlobalOption("plugins", "mdk-r3d:mdk-braw");
 
 
@@ -51,7 +52,7 @@ QMDKPlayer::QMDKPlayer(QObject *parent)
 #endif
     });
 
-    // player_->setBufferRange(0,1000,true);
+    // player_->setBufferRange(0,2000,true);
     //播放状态变化
     player_->onStateChanged([this](mdk::State state) {
         emit this->signalStateChanged(state);
@@ -122,6 +123,10 @@ void QMDKPlayer::setMedia(const QString &url)
     });
     // QThread::usleep(800);
     QThread::msleep(100);
+    //不做音视频同步
+    player_->onSync([] {
+        return DBL_MAX;
+    });
 }
 void QMDKPlayer::setFilter(const QString &filter)
 {
