@@ -412,7 +412,7 @@ MusicShow::MusicShow(QWidget *parent) :
     connect(m_timer,SIGNAL(timeout()),this,SLOT(onOpacity()));
     m_timer->start(30);
     connect(m_timerSlider,SIGNAL(timeout()),this,SLOT(onTimeOut()));
-
+    connect(m_songLrc, SIGNAL(hideSong()), this, SLOT(onSongHide()));
     // 光标自动消失
     // QTimer* timer_ = new QTimer(this);
     // connect(timer_ ,&QTimer::timeout, this, [=](){
@@ -810,7 +810,7 @@ bool MusicShow::isSong(const QString &songName)
 
     foreach (QString audio, audioList) {
         if(songName.contains(audio.replace("*",""))){
-            if(!m_isFirst)synchronyLrc(songName);
+            if(!m_isFirst&&m_isShowLrc)synchronyLrc(songName);
             return true;
         }
     }
@@ -918,7 +918,11 @@ void MusicShow::synchronyLrc(const QString &fileName)
     if (!m_isLrc){
         m_songLrc->setText(info.fileName());
     }
-    if(m_isShowLrc) m_songLrc->show();
+    if(m_isShowLrc){
+        m_songLrc->show();
+    }else{
+        m_songLrc->hide();
+    }
     if (!singner.isEmpty()){
         m_singnerInfo->setText(singner.split("").join("\n"));
         m_singnerInfo->show();
@@ -1057,6 +1061,14 @@ bool MusicShow::adjustShow()
     bool issong = isSong(songName);
     m_waiting->setHidden(issong);
     bool isLiving = isLive(songName);
+    if(m_isShowLrc){
+        m_songLrc->stopLrcMask();
+        m_songLrc->clear();
+        m_songLrc->show();
+    }else{
+        m_songLrc->hide();
+    }
+
     if(m_player == nullptr || 0 != songName.compare(m_player->currentMedia())){
         if(m_player){
             m_player->stop();
@@ -1104,8 +1116,7 @@ bool MusicShow::adjustShow()
 
     m_horizontalSlider->setEnabled(!isLiving);
     m_listView->scrollTo(m_model->index(getCurrentIndex()));
-    m_songLrc->stopLrcMask();
-    m_songLrc->clear();
+
     listTurnVedio(!issong);
     if(m_isShowLrc && isLiving){
         m_songLrc->hide();
@@ -1848,7 +1859,7 @@ void MusicShow::onPlayTimer(qint64 value)
     }
     
     // 歌词同步
-    if (m_isLrc) m_songLrc->updateTime(value);
+    if (m_isLrc&&m_isShowLrc) m_songLrc->updateTime(value);
     
 }
 
@@ -2091,6 +2102,13 @@ void MusicShow::onSongShow()
         m_actLry->setText(tr("暗流涌动"));
     }
     m_isShowLrc = !m_isShowLrc;
+}
+
+void MusicShow::onSongHide()
+{
+    m_isShowLrc = false;
+    m_songLrc->setHidden(true);
+    m_actLry->setText(tr("英花逐流"));
 }
 
 void MusicShow::onClear()

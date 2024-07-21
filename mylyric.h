@@ -32,6 +32,9 @@ public:
   // 清空资源
   void clearAll();
 
+signals:
+  void hideSong();
+
 public slots:
   void updateTime(qint64 time);
 protected:

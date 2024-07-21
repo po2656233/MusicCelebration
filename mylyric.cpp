@@ -244,6 +244,7 @@ void MyLyric::contextMenuEvent(QContextMenuEvent *event)
     QMenu menu;
     menu.addAction(QStringLiteral("隐藏"), this, SLOT(hide()));
     menu.exec(event->globalPos());
+    emit hideSong();
 }
 
 

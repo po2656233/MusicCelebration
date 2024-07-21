@@ -257,7 +257,6 @@ void QMDKPlayer::destroyGLContext(QObject* vo)
 void QMDKPlayer::setROI(QObject* vo, const float* videoRoi, const float* viewportRoi)
 {
     player_->setPointMap(videoRoi, viewportRoi, 2, vo);
-
 }
 
 QString QMDKPlayer::currentMedia() const

@@ -183,6 +183,7 @@ private slots:
     void onSigletonShow();
     // 显示歌词
     void onSongShow();
+    void onSongHide();
     // 文本淡出
     void onOpacity();
 
