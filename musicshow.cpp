@@ -810,7 +810,7 @@ bool MusicShow::isSong(const QString &songName)
 
     foreach (QString audio, audioList) {
         if(songName.contains(audio.replace("*",""))){
-            if(!m_isFirst&&m_isShowLrc)synchronyLrc(songName);
+            if(!m_isFirst)synchronyLrc(songName);
             return true;
         }
     }
@@ -920,8 +920,6 @@ void MusicShow::synchronyLrc(const QString &fileName)
     }
     if(m_isShowLrc){
         m_songLrc->show();
-    }else{
-        m_songLrc->hide();
     }
     if (!singner.isEmpty()){
         m_singnerInfo->setText(singner.split("").join("\n"));
@@ -1061,14 +1059,6 @@ bool MusicShow::adjustShow()
     bool issong = isSong(songName);
     m_waiting->setHidden(issong);
     bool isLiving = isLive(songName);
-    if(m_isShowLrc){
-        m_songLrc->stopLrcMask();
-        m_songLrc->clear();
-        m_songLrc->show();
-    }else{
-        m_songLrc->hide();
-    }
-
     if(m_player == nullptr || 0 != songName.compare(m_player->currentMedia())){
         if(m_player){
             m_player->stop();
