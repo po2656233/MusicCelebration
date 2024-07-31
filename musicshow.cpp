@@ -72,6 +72,8 @@
 #include <QtMultimedia/QMediaPlaylist>
 #include <QtMultimediaWidgets/QVideoWidget>
 
+#include <QtPlatformHeaders/QWindowsWindowFunctions>
+
 using namespace MDK_NS;
 
 QString encrypt(const QString &src);
@@ -84,6 +86,7 @@ static bool isMute = false;
 static bool isDir = true;//是否目录
 static bool isLeftPressDown = false;//鼠标左键按下
 static bool isSigleton = false;
+bool isFull = false;// 双击全屏
 bool isLoadNow = false; //是否正在加载中
 bool isLighterIn = true;// 是否淡入显示(仅对提示信息)
 char xorkey = 75;
@@ -1148,19 +1151,20 @@ void MusicShow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Escape:
         if(windowState()==Qt::WindowFullScreen){
             setWindowState(Qt::WindowNoState);
-            QRect rect = this->geometry();
             if(!m_render->isHidden()){
+                m_render->setWindowFlags(Qt::SubWindow);
                 m_render->showNormal();
+                isFull = false;
             }
-            setGeometry(rect);
         }
+        qDebug()<<" Key_Escape";
         event->accept();
         break;
     default:
         event->ignore();
         break;
     }
-    qDebug()<<"key "<<event->key();
+    qDebug()<<"key "<<event->text();
     QWidget::keyPressEvent(event);
 }
 
@@ -1239,9 +1243,6 @@ void MusicShow::onStatus(mdk::State status)
 }
 
 
-// 双击全屏
-bool isFull = false;
-#include <QtPlatformHeaders/QWindowsWindowFunctions>
 void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
 {
     if(event->button()==Qt::LeftButton)
@@ -1251,7 +1252,7 @@ void MusicShow::mouseDoubleClickEvent(QMouseEvent *event)
             winId(); // 分配窗口句柄 若无此句，会在 qscopedpointer.h的 T *operator->() const noexcept  { return d; } 引发异常
             QWindowsWindowFunctions::setHasBorderInFullScreen(windowHandle(), true);
             if(!m_render->isHidden()){
-                 m_render->setFocus();
+                m_render->setFocus();
                 m_render->setWindowFlags(Qt::Window|Qt::FramelessWindowHint);
                 m_render->showFullScreen();
                 m_render->setCursor(Qt::BlankCursor);
